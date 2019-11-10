@@ -30,12 +30,16 @@ type Event struct {
 	status string
 }
 
-func createUserInstance(username string, password string, email string) User {
+func CreateUserInstance(username string, password string, email string) User {
 	return User{
 		username: username,
 		password: password,
 		email:    email,
 	}
+}
+
+func (user *User) SetDatabaseConnection(db *sql.DB) {
+	user.databaseConnection = db
 }
 
 func (user *User) CreationSetup() (bool, string) {
@@ -64,9 +68,9 @@ func (user *User) Authenticate() (bool, string) {
 	password_auth := NewPasswordValidator(user.password)
 	isValidPassword := password_auth.comparePasswords(password_hash)
 	if isValidPassword == true {
-		return true, "Valid user"
+		return true, "1"
 	}
-	return false, "Invalid Password"
+	return false, "Ungültiges Passwort"
 }
 
 func (user *User) IsUniqueUsername() bool {
@@ -92,11 +96,11 @@ func (user *User) IsUniqueUsername() bool {
 
 func (user *User) GetPasswordHashByUsername() (bool, string) {
 	statement, err := user.databaseConnection.Prepare("SELECT password FROM User WHERE username=?")
-	defer statement.Close()
 	if err != nil {
 		fmt.Println(err.Error())
 		return false, "Database connection lost"
 	}
+	defer statement.Close()
 	result, err := statement.Query(user.username)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -106,7 +110,7 @@ func (user *User) GetPasswordHashByUsername() (bool, string) {
 	result.Next()
 	result.Scan(&passwordHash)
 	if passwordHash == "" {
-		return false, "Not user with this username was found"
+		return false, "Kein Nutzer mit diesem Namen gefunden"
 	}
 	return true, passwordHash
 }
