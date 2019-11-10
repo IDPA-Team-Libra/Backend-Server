@@ -14,6 +14,7 @@ import (
 type User struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+	Email    string `json:"email"`
 }
 
 type Auther struct {
@@ -84,7 +85,42 @@ func GenerateTokenForUser(username string, w http.ResponseWriter) Response {
 }
 
 func Register(w http.ResponseWriter, r *http.Request) {
-
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.Write([]byte("Keine Parameter übergeben"))
+		return
+	}
+	var currentUser User
+	err = json.Unmarshal(body, &currentUser)
+	if err != nil {
+		w.Write([]byte("Invalid json"))
+		return
+	}
+	user := user.CreateUserInstance(currentUser.Username, currentUser.Password, currentUser.Email)
+	user.SetDatabaseConnection(database)
+	if user.IsUniqueUsername() == true {
+		success, error_message := user.CreationSetup()
+		if success == false {
+			fmt.Println(error_message)
+			return
+		}
+		if user.Write() == false {
+			w.Write([]byte("Benutzer konnte nicht erstellt werden. Bitte an Kundendienst wenden"))
+		} else {
+			response := Response{}
+			if success == true {
+				response = GenerateTokenForUser(currentUser.Username, w)
+			}
+			response.Message = "1"
+			resp, err := json.Marshal(response)
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+			w.Write(resp)
+		}
+	} else {
+		w.Write([]byte("Benutzername bereits vergeben"))
+	}
 }
 
 func ValidateToken(w http.ResponseWriter, r *http.Request) {

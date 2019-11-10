@@ -88,7 +88,7 @@ func (user *User) IsUniqueUsername() bool {
 	var returnedCounter int
 	result.Next()
 	result.Scan(&returnedCounter)
-	if returnedCounter == 0 {
+	if returnedCounter > 0 {
 		return false
 	}
 	return true
@@ -116,13 +116,13 @@ func (user *User) GetPasswordHashByUsername() (bool, string) {
 }
 
 func (user *User) Write() bool {
-	statement, err := user.databaseConnection.Prepare("INSERT INTO User(username,password,email,creationdate) VALUES(?,?,?,?)")
+	statement, err := user.databaseConnection.Prepare("INSERT INTO User(username,password,email,creationdate) VALUES(?,?,?,NOW())")
 	defer statement.Close()
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
 	}
-	_, err = statement.Exec(user.username, user.password, user.email, user.registrationDate)
+	_, err = statement.Exec(user.username, user.password, user.email)
 	if err != nil {
 		return false
 	}
