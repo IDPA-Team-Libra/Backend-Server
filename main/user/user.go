@@ -7,11 +7,11 @@ import (
 )
 
 type User struct {
-	id                 int
-	username           string
-	password           string
-	email              string
-	registrationDate   string
+	id                 int    `json:"id"`
+	username           string `json:"username"`
+	password           string `json:"email"`
+	email              string `json:"password"`
+	registrationDate   string `json:"registrationDate"`
 	databaseConnection *sql.DB
 }
 
