@@ -7,9 +7,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Liberatys/libra-back/main/mail"
 	"github.com/Liberatys/libra-back/main/user"
 	"github.com/dgrijalva/jwt-go"
 )
+
+var mailer mail.Mail
 
 type User struct {
 	Username string `json:"username"`
@@ -113,6 +116,8 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			}
 			response.Message = "1"
 			resp, err := json.Marshal(response)
+			mailer.Receaver = currentUser.Email
+			go mailer.SendEmail()
 			if err != nil {
 				fmt.Println(err.Error())
 			}
