@@ -18,6 +18,4 @@ CREATE TABLE UserAction(
 );
 
 CREATE TABLE Transaction(
-
-
 );

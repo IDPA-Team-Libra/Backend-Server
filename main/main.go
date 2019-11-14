@@ -6,6 +6,7 @@ import (
 
 	"github.com/Liberatys/Sanctuary/service"
 	"github.com/Liberatys/libra-back/main/mail"
+	"github.com/Liberatys/libra-back/main/stock"
 )
 
 var database *sql.DB
@@ -17,8 +18,9 @@ func main() {
 	service.ActivateHTTPServer()
 	fmt.Println(service.SetDatabaseInformation("localhost", "3306", "mysql", "root", "1234", "libra"))
 	database = service.GetDatabaseConnection()
+	setDatabaseReferences(database)
 	//apiconnection.GetStockDataForSymbol("TSLA", av.TimeIntervalFiveMinute)
-	mailer = mail.NewMail("mountainviewcasino@gmail.com", "1234", "Wir heissen Sie herzlich bei Libra wilkommen", "Welcome to libra", "")
+	mailer = mail.NewMail("mountainviewcasino@gmail.com", "1234", "Wir heissen Sie herzlich bei Libra wilkommen", "Welcome to libra")
 	//stockapi.SendRequest()
 	/*
 		SPACE FOR ROUTES
@@ -29,4 +31,8 @@ func main() {
 		END SPACE FOR ROUTES
 	*/
 	service.StartHTTPServer()
+}
+
+func setDatabaseReferences(database *sql.DB) {
+	stock.SetDatabaseConnection(database)
 }

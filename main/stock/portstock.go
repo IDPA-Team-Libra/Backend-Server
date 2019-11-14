@@ -6,10 +6,9 @@ type PortfolioStock struct {
 	Name              string  `json:"name"`
 	BuyPrice          float64 `json:"buyPrice"`
 	BuyDate           string  `json:"buyDate"`
-	StockID           int     `json:"stockID"`
 	Amount            int64   `json:"amount "`
 	MarketValue       float64 `json:"marketValue"`
-	DifferencePercent float64 `json:"DifferencePercent"`
+	DifferencePercent float64 `json:"differencePercent"`
 	Difference        float64 `json:"difference"`
 	Result            bool    `json:"result"`
 }

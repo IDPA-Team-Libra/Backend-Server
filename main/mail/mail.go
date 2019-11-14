@@ -17,10 +17,10 @@ type smtpServer struct {
 func (s *smtpServer) serverName() string {
 	return s.host + ":" + s.port
 }
-func NewMail(Sender string, GmailPass string, Message string, Subject string, Receaver string) Mail {
+
+func NewMail(Sender string, GmailPass string, Message string, Subject string) Mail {
 	mail := Mail{
 		Sender:    Sender,
-		Receaver:  Receaver,
 		GmailPass: GmailPass,
 		Message:   Message,
 		Subject:   Subject,
@@ -28,10 +28,10 @@ func NewMail(Sender string, GmailPass string, Message string, Subject string, Re
 	return mail
 }
 
-func (mail *Mail) SendEmail() {
+func (mail *Mail) SendEmail(Receaver string) {
 	m := gomail.NewMessage()
 	m.SetHeader("From", mail.Sender)
-	m.SetHeader("To", mail.Receaver)
+	m.SetHeader("To", Receaver)
 	m.SetHeader("Subject", mail.Subject)
 	m.SetBody("text/html", mail.Message)
 	d := gomail.NewDialer("smtp.gmail.com", 587, mail.Sender, mail.GmailPass)

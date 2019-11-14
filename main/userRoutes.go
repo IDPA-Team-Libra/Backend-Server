@@ -12,6 +12,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
+var jwtKey = []byte("PLACEHOLDER")
 var mailer mail.Mail
 
 type User struct {
@@ -62,8 +63,6 @@ type Response struct {
 	Token          string `json:"token"`
 	ExpirationTime int64  `json:"expires"`
 }
-
-var jwtKey = []byte("PLACEHOLDER")
 
 func GenerateTokenForUser(username string, w http.ResponseWriter) Response {
 	expirationTime := time.Now().Add(5 * time.Minute)
@@ -116,8 +115,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			}
 			response.Message = "1"
 			resp, err := json.Marshal(response)
-			mailer.Receaver = currentUser.Email
-			go mailer.SendEmail()
+			go mailer.SendEmail(currentUser.Email)
 			if err != nil {
 				fmt.Println(err.Error())
 			}
