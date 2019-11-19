@@ -18,4 +18,16 @@ CREATE TABLE UserAction(
 );
 
 CREATE TABLE Transaction(
+
+);
+
+CREATE TABLE Stock(
+    id INTEGER AUTO_INCREMENT,
+    symbol varchar(255),
+    company varchar(255),
+    timeData ENUM('Daily','5','15','30','60'),
+    data LONGTEXT,
+    price varchar(255),
+    last_query DATETIME,
+    PRIMARY KEY(id)
 );

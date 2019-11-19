@@ -1,5 +1,6 @@
 package stock
 
+//TODO: implement the functionality for the delayed exectution stock buy / sell
 type PortfolioStock struct {
 	ID                string  `json:"id"`
 	Symbol            string  `json:"symbol"`

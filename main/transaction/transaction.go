@@ -1,5 +1,7 @@
 package transaction
 
+//TODO: Implement the functioality for the transaction
+
 type Transaction struct {
 	ID          int     `json:"id"`
 	UserID      int     `json:"userID"`
@@ -15,5 +17,6 @@ func NewTransaction() {
 }
 
 func LoadTransactions(userID int) []Transaction {
-
+	var transactions []Transaction
+	return transactions
 }

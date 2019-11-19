@@ -2,6 +2,7 @@ package mail
 
 import "gopkg.in/gomail.v2"
 
+//TODO implement mailer template
 type Mail struct {
 	Sender    string
 	Receaver  string

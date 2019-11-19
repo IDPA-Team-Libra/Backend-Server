@@ -1,0 +1,1 @@
+INSERT INTO Stock(symbol,company,timeData,last_query) VALUES ('AMZN','Amazone','5',NOW()),('TSLA','Tesla','5',NOW()),('YHOO','Yahoo','5',NOW());

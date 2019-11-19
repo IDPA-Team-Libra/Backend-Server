@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Liberatys/Sanctuary/service"
+	"github.com/Liberatys/libra-back/main/apiconnection"
 	"github.com/Liberatys/libra-back/main/mail"
 	"github.com/Liberatys/libra-back/main/stock"
 )
@@ -27,9 +28,11 @@ func main() {
 	*/
 	service.AddHTTPRoute("/user/login", Login)
 	service.AddHTTPRoute("/user/register", Register)
+	service.AddHTTPRoute("/stock/all", GetStocks)
 	/*
 		END SPACE FOR ROUTES
 	*/
+	apiconnection.LoadAllStocks("5")
 	service.StartHTTPServer()
 }
 

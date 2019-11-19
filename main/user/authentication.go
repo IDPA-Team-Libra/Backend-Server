@@ -13,6 +13,7 @@ func NewPasswordValidator(password string) PasswordValidatior {
 		Password: password,
 	}
 }
+
 func (passwordValidator *PasswordValidatior) isValidPassword() bool {
 	//TODO: Find a good way to validate the length and composition of a passwords
 	/*

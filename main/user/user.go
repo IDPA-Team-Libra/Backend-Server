@@ -6,13 +6,14 @@ import (
 	"time"
 )
 
+//TODO cleanup code
 type User struct {
-	id                 int    `json:"id"`
-	username           string `json:"username"`
-	password           string `json:"email"`
-	email              string `json:"password"`
-	registrationDate   string `json:"registrationDate"`
-	databaseConnection *sql.DB
+	ID                 int    `json:"id"`
+	Username           string `json:"username"`
+	Password           string `json:"email"`
+	Email              string `json:"password"`
+	RegistrationDate   string `json:"registrationDate"`
+	DatabaseConnection *sql.DB
 }
 
 type AccessToken struct {
@@ -32,40 +33,40 @@ type Event struct {
 
 func CreateUserInstance(username string, password string, email string) User {
 	return User{
-		username: username,
-		password: password,
-		email:    email,
+		Username: username,
+		Password: password,
+		Email:    email,
 	}
 }
 
 func (user *User) SetDatabaseConnection(db *sql.DB) {
-	user.databaseConnection = db
+	user.DatabaseConnection = db
 }
 
 func (user *User) CreationSetup() (bool, string) {
-	if user.username == "" || user.password == "" || user.email == "" {
+	if user.Username == "" || user.Password == "" || user.Email == "" {
 		return false, "Ungültige Nutzerdaten"
 	}
 	uniqueUsername := user.IsUniqueUsername()
 	if uniqueUsername == false {
 		return false, "Username is not unique"
 	}
-	passwordValidator := NewPasswordValidator(user.password)
-	user.password = passwordValidator.HashPassword()
+	passwordValidator := NewPasswordValidator(user.Password)
+	user.Password = passwordValidator.HashPassword()
 	dt := time.Now()
-	user.registrationDate = dt.String()
+	user.RegistrationDate = dt.String()
 	return true, "Usersetup complete"
 }
 
 func (user *User) Authenticate() (bool, string) {
-	if user.username == "" || user.password == "" {
+	if user.Username == "" || user.Password == "" {
 		return false, "Ungültige Nutzerdaten"
 	}
 	success, password_hash := user.GetPasswordHashByUsername()
 	if success == false {
 		return false, password_hash
 	}
-	password_auth := NewPasswordValidator(user.password)
+	password_auth := NewPasswordValidator(user.Password)
 	isValidPassword := password_auth.comparePasswords(password_hash)
 	if isValidPassword == true {
 		return true, "1"
@@ -74,13 +75,13 @@ func (user *User) Authenticate() (bool, string) {
 }
 
 func (user *User) IsUniqueUsername() bool {
-	statement, err := user.databaseConnection.Prepare("SELECT count(*) FROM User WHERE username = ?")
+	statement, err := user.DatabaseConnection.Prepare("SELECT count(*) FROM User WHERE username = ?")
 	defer statement.Close()
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
 	}
-	result, err := statement.Query(user.username)
+	result, err := statement.Query(user.Username)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -95,13 +96,13 @@ func (user *User) IsUniqueUsername() bool {
 }
 
 func (user *User) GetPasswordHashByUsername() (bool, string) {
-	statement, err := user.databaseConnection.Prepare("SELECT password FROM User WHERE username=?")
+	statement, err := user.DatabaseConnection.Prepare("SELECT password FROM User WHERE username=?")
 	if err != nil {
 		fmt.Println(err.Error())
 		return false, "Database connection lost"
 	}
 	defer statement.Close()
-	result, err := statement.Query(user.username)
+	result, err := statement.Query(user.Username)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -116,13 +117,13 @@ func (user *User) GetPasswordHashByUsername() (bool, string) {
 }
 
 func (user *User) Write() bool {
-	statement, err := user.databaseConnection.Prepare("INSERT INTO User(username,password,email,creationdate) VALUES(?,?,?,NOW())")
+	statement, err := user.DatabaseConnection.Prepare("INSERT INTO User(username,password,email,creationdate) VALUES(?,?,?,NOW())")
 	defer statement.Close()
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
 	}
-	_, err = statement.Exec(user.username, user.password, user.email)
+	_, err = statement.Exec(user.Username, user.Password, user.Email)
 	if err != nil {
 		return false
 	}
