@@ -3,7 +3,6 @@ package user
 import (
 	"database/sql"
 	"fmt"
-	"time"
 )
 
 //TODO cleanup code
@@ -53,8 +52,6 @@ func (user *User) CreationSetup() (bool, string) {
 	}
 	passwordValidator := NewPasswordValidator(user.Password)
 	user.Password = passwordValidator.HashPassword()
-	dt := time.Now()
-	user.RegistrationDate = dt.String()
 	return true, "Usersetup complete"
 }
 

@@ -12,25 +12,31 @@ import (
 
 //TODO: Implement the methods required to store the information in angular
 var stock_data []stock.Stock
-var stock_string []string
+var stock_string []byte
+
+type StockHolderstruct struct {
+	Stocks []stock.Stock `json:"stocks"`
+}
 
 func GetStocks(w http.ResponseWriter, r *http.Request) {
 	if len(stock_data) > 0 {
-		w.Write([]byte(stock_string))
+		w.Write(stock_string)
+		return
 	}
 	stocks := stock.LoadAllStockSymbols("5")
 	for key := range stocks {
 		stocks[key].Load()
-		data, err := json.Marshal(stocks[key])
-		if err != nil {
-
-		}
 	}
+	stock_dat := StockHolderstruct{
+		stocks,
+	}
+	data, err := json.Marshal(stock_dat)
 	if err != nil {
 		fmt.Println(err.Error())
-		return
 	}
+	stock_string = data
 	stock_data = stocks
+	w.Write(stock_string)
 }
 
 func compress(source string) []byte {
