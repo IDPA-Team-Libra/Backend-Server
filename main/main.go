@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/Liberatys/Sanctuary/service"
-	"github.com/Liberatys/libra-back/main/apiconnection"
 	"github.com/Liberatys/libra-back/main/mail"
 	"github.com/Liberatys/libra-back/main/stock"
 )
@@ -17,7 +16,7 @@ func main() {
 	service := service.NewService("#001", "login", "A login service that handles login for users", "3440")
 	service.DefaultRoutes = false
 	service.ActivateHTTPServer()
-	fmt.Println(service.SetDatabaseInformation("localhost", "3306", "mysql", "root", "1234", "libra"))
+	fmt.Println(service.SetDatabaseInformation("localhost", "3306", "mysql", "root", "Siera_001_DB", "libra"))
 	database = service.GetDatabaseConnection()
 	setDatabaseReferences(database)
 	//apiconnection.GetStockDataForSymbol("TSLA", av.TimeIntervalFiveMinute)
@@ -32,7 +31,7 @@ func main() {
 	/*
 		END SPACE FOR ROUTES
 	*/
-	apiconnection.LoadAllStocks("5")
+	//apiconnection.LoadAllStocks("5")
 	service.StartHTTPServer()
 }
 

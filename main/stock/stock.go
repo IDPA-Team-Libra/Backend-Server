@@ -1,6 +1,8 @@
 package stock
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Stock struct {
 	ID       int64  `json:"id"`

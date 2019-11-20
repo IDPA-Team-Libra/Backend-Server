@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/Liberatys/libra-back/main/stock"
 	av "github.com/cmckee-dev/go-alpha-vantage"
@@ -17,12 +18,13 @@ func GetStockDataForSymbol(recovered_stock stock.Stock, interval av.TimeInterval
 	client := av.NewClient(APIKEY)
 	result, err := client.StockTimeSeriesIntraday(interval, recovered_stock.Symbol)
 	if err != nil {
+		fmt.Println(err.Error())
 		return stock.Stock{}, false
 	}
 	if len(result) == 0 {
 		return recovered_stock, false
 	}
-	price := fmt.Sprintf("%.3f", result[len(result)-1].Close)
+	price := fmt.Sprintf("%.3f", result[0].Close)
 	pagesJson, err := json.Marshal(result)
 	if err != nil {
 		return stock.Stock{}, false
@@ -47,10 +49,12 @@ func LoadAllStocks(timeInterval string) {
 		wg.Add(1)
 		current_wait_group += 1
 		go LoadAndStoreStock(value)
-		if max_id-id > 10 {
+		if max_id-id > 5 {
 			if current_wait_group >= max_routines {
+				fmt.Println("Waiting for requests")
 				current_wait_group = 0
 				wg.Wait()
+				time.Sleep(1 * time.Minute)
 			}
 		}
 	}
