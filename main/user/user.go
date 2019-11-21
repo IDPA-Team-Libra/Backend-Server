@@ -3,7 +3,6 @@ package user
 import (
 	"database/sql"
 	"fmt"
-	"time"
 )
 
 //TODO cleanup code
@@ -14,6 +13,7 @@ type User struct {
 	Email              string `json:"password"`
 	RegistrationDate   string `json:"registrationDate"`
 	DatabaseConnection *sql.DB
+	Portfolio          Portfolio
 }
 
 type AccessToken struct {
@@ -53,8 +53,6 @@ func (user *User) CreationSetup() (bool, string) {
 	}
 	passwordValidator := NewPasswordValidator(user.Password)
 	user.Password = passwordValidator.HashPassword()
-	dt := time.Now()
-	user.RegistrationDate = dt.String()
 	return true, "Usersetup complete"
 }
 
@@ -93,6 +91,23 @@ func (user *User) IsUniqueUsername() bool {
 		return false
 	}
 	return true
+}
+
+func (user *User) GetUserIdByUsername(username string) int64 {
+	statement, err := user.DatabaseConnection.Prepare("SELECT id from user WHERE username = ?")
+	defer statement.Close()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	result, err := statement.Query(username)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	defer result.Close()
+	var id int64
+	result.Next()
+	result.Scan(&id)
+	return id
 }
 
 func (user *User) GetPasswordHashByUsername() (bool, string) {

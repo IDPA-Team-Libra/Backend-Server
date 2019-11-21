@@ -11,6 +11,12 @@ import (
 
 var database *sql.DB
 
+//TODO
+//! Rewrite some of the enitites, like user
+//! Write tests for the entities
+//! Create a model for the backend / class diagramm
+//! Refactor written code and make it more modular
+
 func main() {
 	// setup service with a http server
 	service := service.NewService("#001", "login", "A login service that handles login for users", "3440")
