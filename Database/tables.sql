@@ -32,9 +32,19 @@ CREATE TABLE User
 );
 
 
-                CREATE TABLE Transaction(
+CREATE TABLE Transaction(
+    id INTEGER NOT NULL AUTO_INCREMENT,
+    userID INTEGER NOT NULL,
+    action varchar(255),
+    description varchar(255),
+    amount INTEGER,
+    value Decimal(10,4),
+    date date,
+    PRIMARY KEY (id),
+    FOREIGN KEY (userID) REFERENCES User(id)
 
-);
+
+    
 
                 CREATE TABLE Stock
                 (
