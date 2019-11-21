@@ -12,6 +12,10 @@ const (
 	ERRORS
 )
 
+func LogLevelToString(level LogLevel) string {
+	return ""
+}
+
 //Logger an interface that will allow us to use multiple ways of outputing messages
 type Logger interface {
 	Log(string) bool
@@ -19,13 +23,4 @@ type Logger interface {
 	FormatLog(string, LogLevel) string
 	CheckState() bool
 	GetType() string
-}
-
-type ConsoleLogger struct {
-}
-
-type FileLogger struct {
-}
-
-type RemoteLogger struct {
 }

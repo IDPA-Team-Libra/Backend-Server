@@ -13,6 +13,7 @@ type User struct {
 	Email              string `json:"password"`
 	RegistrationDate   string `json:"registrationDate"`
 	DatabaseConnection *sql.DB
+	Portfolio          Portfolio
 }
 
 type AccessToken struct {
