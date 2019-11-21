@@ -53,7 +53,7 @@ CREATE TABLE User
     PRIMARY KEY
                         (id)
 );
-                        CREATE TABLE portfolio
+                        CREATE TABLE Portfolio
                         (
                                 id INTEGER
                                 AUTO_INCREMENT,
@@ -63,6 +63,8 @@ CREATE TABLE User
                                 total_stocks INTEGER,
                                 start_capital Decimal
                                 (15,4),
+                                PRIMARY KEY (id),
+                                FOREIGN KEY (user_id) REFERENCE User(id)
                         );
 
                                 CREATE TABLE portfolio_item

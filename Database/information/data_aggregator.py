@@ -1,9 +1,6 @@
-
-
 def read_file(file):
     f = open(file, "r")
     return f.readline()
-
 
 symbol = read_file("symbol.txt").split(",")
 names = read_file("company_names.txt").split(",")
