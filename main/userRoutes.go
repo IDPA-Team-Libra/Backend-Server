@@ -16,9 +16,10 @@ var jwtKey = []byte("PLACEHOLDER")
 var mailer mail.Mail
 
 type User struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Email    string `json:"email"`
+	Username  string         `json:"username"`
+	Password  string         `json:"password"`
+	Email     string         `json:"email"`
+	Portfolio user.Portfolio `json:"portfolio"`
 }
 
 type Auther struct {
@@ -38,14 +39,17 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Invalid json"))
 		return
 	}
-	user := user.CreateUserInstance(currentUser.Username, currentUser.Password, "")
-	user.SetDatabaseConnection(database)
-	success, message := user.Authenticate()
+	user_instance := user.CreateUserInstance(currentUser.Username, currentUser.Password, "")
+	user_instance.SetDatabaseConnection(database)
+	success, message := user_instance.Authenticate()
 	response := Response{}
 	if success == true {
 		response = GenerateTokenForUser(currentUser.Username, w)
 	}
 	response.Message = message
+	currentUser.Password = ""
+	currentUser.Portfolio = user.LoadPortfolio(user_instance)
+	response.UserData = currentUser
 	resp, err := json.Marshal(response)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -62,6 +66,7 @@ type Response struct {
 	TokenName      string `json:"tokenName"`
 	Token          string `json:"token"`
 	ExpirationTime int64  `json:"expires"`
+	UserData       User   `json:"user"`
 }
 
 func GenerateTokenForUser(username string, w http.ResponseWriter) Response {
@@ -98,24 +103,31 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Invalid json"))
 		return
 	}
-	user := user.CreateUserInstance(currentUser.Username, currentUser.Password, currentUser.Email)
-	user.SetDatabaseConnection(database)
-	if user.IsUniqueUsername() == true {
-		success, error_message := user.CreationSetup()
+	user_instance := user.CreateUserInstance(currentUser.Username, currentUser.Password, currentUser.Email)
+	user_instance.SetDatabaseConnection(database)
+	if user_instance.IsUniqueUsername() == true {
+		success, error_message := user_instance.CreationSetup()
 		if success == false {
 			fmt.Println(error_message)
 			return
 		}
-		if user.Write() == false {
+		if user_instance.Write() == false {
 			w.Write([]byte("Benutzer konnte nicht erstellt werden. Bitte an Kundendienst wenden"))
 		} else {
 			response := Response{}
 			if success == true {
 				response = GenerateTokenForUser(currentUser.Username, w)
 			}
-			response.Message = "1"
+			response.Message = "Success"
+			user_id := user_instance.GetUserIdByUsername(user_instance.Username)
+			portfolio := user.Portfolio{}
+			portfolio.Create(user_id, user_instance, 5000.0)
+			currentUser.Password = ""
+			currentUser.Portfolio = portfolio
+			response.UserData = currentUser
 			resp, err := json.Marshal(response)
-			go mailer.SendEmail(currentUser.Email)
+			// activite if password is set and production is reached
+			//go mailer.SendEmail(currentUser.Email)
 			if err != nil {
 				fmt.Println(err.Error())
 			}

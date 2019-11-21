@@ -93,6 +93,23 @@ func (user *User) IsUniqueUsername() bool {
 	return true
 }
 
+func (user *User) GetUserIdByUsername(username string) int64 {
+	statement, err := user.DatabaseConnection.Prepare("SELECT id from user WHERE username = ?")
+	defer statement.Close()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	result, err := statement.Query(username)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	defer result.Close()
+	var id int64
+	result.Next()
+	result.Scan(&id)
+	return id
+}
+
 func (user *User) GetPasswordHashByUsername() (bool, string) {
 	statement, err := user.DatabaseConnection.Prepare("SELECT password FROM User WHERE username=?")
 	if err != nil {
