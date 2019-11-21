@@ -42,6 +42,7 @@ CREATE TABLE Transaction(
     date date,
     PRIMARY KEY (id),
     FOREIGN KEY (userID) REFERENCES User(id)
+);
 
 
     
