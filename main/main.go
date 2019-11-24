@@ -22,7 +22,7 @@ func main() {
 	service := service.NewService("#001", "login", "A login service that handles login for users", "3440")
 	service.DefaultRoutes = false
 	service.ActivateHTTPServer()
-	fmt.Println(service.SetDatabaseInformation("localhost", "3306", "mysql", "root", "libra"))
+	fmt.Println(service.SetDatabaseInformation("localhost", "3306", "mysql", "root", "Siera_001_DB", "libra"))
 	database = service.GetDatabaseConnection()
 	setDatabaseReferences(database)
 	//apiconnection.GetStockDataForSymbol("TSLA", av.TimeIntervalFiveMinute)

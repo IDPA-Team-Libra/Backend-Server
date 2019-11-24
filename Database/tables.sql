@@ -32,61 +32,72 @@ CREATE TABLE User
 );
 
 
-CREATE TABLE Transaction(
-    id INTEGER NOT NULL AUTO_INCREMENT,
-    userID INTEGER NOT NULL,
-    action varchar(255),
-    description varchar(255),
-    amount INTEGER,
-    value Decimal(10,4),
-    date date,
-    PRIMARY KEY (id),
-    FOREIGN KEY (userID) REFERENCES User(id)
-);
-
-
-    
-
-                CREATE TABLE Stock
+                CREATE TABLE Transaction
                 (
-                        id INTEGER
+                        id INTEGER NOT NULL
                         AUTO_INCREMENT,
-    symbol varchar
+    userID INTEGER NOT NULL,
+    action varchar
                         (255),
-    company varchar
+    description varchar
                         (255),
-    timeData ENUM
-                        ('Daily','5','15','30','60'),
-    data LONGTEXT,
-    price varchar
-                        (255),
-    last_query DATETIME,
+    amount INTEGER,
+    value Decimal
+                        (10,4),
+    date date,
     PRIMARY KEY
+                        (id),
+    FOREIGN KEY
+                        (userID) REFERENCES User
                         (id)
 );
-                        CREATE TABLE Portfolio
+
+
+
+
+                        CREATE TABLE Stock
                         (
                                 id INTEGER
                                 AUTO_INCREMENT,
-                                user_id INTEGER,
-                                current_value Decimal
-                                (15,4),
-                                total_stocks INTEGER,
-                                start_capital Decimal
-                                (15,4),
-                                PRIMARY KEY (id),
-                                FOREIGN KEY (user_id) REFERENCE User(id)
-                        );
-
-                                CREATE TABLE portfolio_item
+    symbol varchar
+                                (255),
+    company varchar
+                                (255),
+    timeData ENUM
+                                ('Daily','5','15','30','60'),
+    data LONGTEXT,
+    price varchar
+                                (255),
+    last_query DATETIME,
+    PRIMARY KEY
+                                (id)
+);
+                                CREATE TABLE Portfolio
                                 (
                                         id INTEGER
                                         AUTO_INCREMENT,
+                                user_id INTEGER,
+                                current_value Decimal
+                                        (15,4),
+                                total_stocks INTEGER,
+                                start_capital Decimal
+                                        (15,4),
+                                PRIMARY KEY
+                                        (id),
+                                FOREIGN KEY
+                                        (user_id) REFERENCES User
+                                        (id)
+                        );
+
+                                        CREATE TABLE portfolio_item
+                                        (
+                                                id INTEGER
+                                                AUTO_INCREMENT,
                                 stock_id INTEGER,
                                 buy_price Decimal
-                                        (10,4),
+                                                (10,4),
                                 buy_date_time DATETIME,
                                 quantity INTEGER,
                                 total_buy_price Decimal
-                                        (10,4),
+                                                (10,4),
                                 );
