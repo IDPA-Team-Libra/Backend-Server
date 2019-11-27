@@ -17,7 +17,7 @@ type FutureTransactionOption struct {
 
 // TODO: Alessandro macht die Einschreibunng in die Datenbank
 func AddTransaction(w http.ResponseWriter, r *http.Request) {
-	//? mal schaun
+	// mal schaun
 }
 
 func AddDelayedTransaction(w http.ResponseWriter, r *http.Request) {}
