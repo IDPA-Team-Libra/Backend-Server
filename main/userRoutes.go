@@ -16,10 +16,16 @@ var jwtKey = []byte("PLACEHOLDER")
 var mailer mail.Mail
 
 type User struct {
-	Username  string         `json:"username"`
-	Password  string         `json:"password"`
-	Email     string         `json:"email"`
-	Portfolio user.Portfolio `json:"portfolio"`
+	Username  string              `json:"username"`
+	Password  string              `json:"password"`
+	Email     string              `json:"email"`
+	Portfolio SerializedPortfolio `json:"portfolio"`
+}
+
+type SerializedPortfolio struct {
+	CurrentValue string `json:"currentValue"`
+	Stocks       string `json:"stocks"`
+	StartCapital string `json:"startCapital"`
 }
 
 type Auther struct {
@@ -48,8 +54,13 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 	response.Message = message
 	currentUser.Password = ""
-	currentUser.Portfolio = user.LoadPortfolio(user_instance)
-	response.UserData = currentUser
+	portfolio := user.LoadPortfolio(user_instance)
+	currentUser.Portfolio = SerializedPortfolio{
+		CurrentValue: portfolio.CurrentValue.String(),
+		StartCapital: portfolio.StartCapital.String(),
+	}
+	user_data, _ := json.Marshal(currentUser)
+	response.UserData = string(user_data)
 	resp, err := json.Marshal(response)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -66,7 +77,7 @@ type Response struct {
 	TokenName      string `json:"tokenName"`
 	Token          string `json:"token"`
 	ExpirationTime int64  `json:"expires"`
-	UserData       User   `json:"user"`
+	UserData       string `json:"user"`
 }
 
 func GenerateTokenForUser(username string, w http.ResponseWriter) Response {
@@ -123,8 +134,13 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			portfolio := user.Portfolio{}
 			portfolio.Create(user_id, user_instance, 5000.0)
 			currentUser.Password = ""
-			currentUser.Portfolio = portfolio
-			response.UserData = currentUser
+			currentUser.Portfolio = SerializedPortfolio{
+				CurrentValue: portfolio.CurrentValue.String(),
+				StartCapital: portfolio.StartCapital.String(),
+			}
+			fmt.Println(currentUser.Portfolio)
+			user_data, _ := json.Marshal(currentUser)
+			response.UserData = string(user_data)
 			resp, err := json.Marshal(response)
 			// activite if password is set and production is reached
 			//go mailer.SendEmail(currentUser.Email)
