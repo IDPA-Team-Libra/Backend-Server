@@ -34,10 +34,12 @@ func main() {
 	service.AddHTTPRoute("/user/login", Login)
 	service.AddHTTPRoute("/user/register", Register)
 	service.AddHTTPRoute("/stock/all", GetStocks)
+	service.AddHTTPRoute("/transaction/buy", AddTransaction)
+	service.AddHTTPRoute("/transaction/buy/delayed", AddDelayedTransaction)
 	/*
 		END SPACE FOR ROUTES
 	*/
-	//apiconnection.LoadAllStocks("5")
+	//go apiconnection.LoadAllStocks("5")
 	service.StartHTTPServer()
 }
 

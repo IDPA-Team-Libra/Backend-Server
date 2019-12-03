@@ -51,6 +51,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	response := Response{}
 	if success == true {
 		response = GenerateTokenForUser(currentUser.Username, w)
+	} else {
+		response.Message = message
+		resp, _ := json.Marshal(response)
+		w.Write(resp)
+		return
 	}
 	response.Message = message
 	currentUser.Password = ""
@@ -132,7 +137,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			response.Message = "Success"
 			user_id := user_instance.GetUserIdByUsername(user_instance.Username)
 			portfolio := user.Portfolio{}
-			portfolio.Create(user_id, user_instance, 5000.0)
+			portfolio.Write(user_id, user_instance, 5000.0)
 			currentUser.Password = ""
 			currentUser.Portfolio = SerializedPortfolio{
 				CurrentValue: portfolio.CurrentValue.String(),

@@ -7,17 +7,17 @@ import (
 )
 
 type Transaction struct {
-	ID                 int     `json:"id"`
-	UserID             int     `json:"userID"`
-	Action             string  `json:"action"`
-	Description        string  `json:"description"`
-	Amount             int     `json:"amount"`
-	Value              float64 `json:"value"`
-	Date               string  `json:"date"`
+	ID                 int64  `json:"id"`
+	UserID             int64  `json:"userID"`
+	Action             string `json:"action"`
+	Description        string `json:"description"`
+	Amount             int    `json:"amount"`
+	Value              string `json:"value"`
+	Date               string `json:"date"`
 	DatabaseConnection *sql.DB
 }
 
-func NewTransaction(UserID int, Action string, Description string, Amount int, Value float64, Date string) Transaction {
+func NewTransaction(UserID int64, Action string, Description string, Amount int, Value string, Date string) Transaction {
 	transaction := Transaction{
 		UserID:      UserID,
 		Action:      Action,
@@ -31,7 +31,6 @@ func NewTransaction(UserID int, Action string, Description string, Amount int, V
 
 func (transaction *Transaction) LoadTransactions(userID int) []Transaction {
 	var transactions []Transaction
-
 	statement, err := transaction.DatabaseConnection.Prepare("SELECT action,description,amount,value,date FROM Transaction WHERE userid = ?")
 	defer statement.Close()
 	if err != nil {
@@ -57,7 +56,7 @@ func (transaction *Transaction) LoadTransactions(userID int) []Transaction {
 }
 
 func (transaction *Transaction) Write() bool {
-	statement, err := transaction.DatabaseConnection.Prepare("INSERT INTO Transaction(userid,action,description,amount,value,date) VALUES(?,?,?,?,?,CURDATE()")
+	statement, err := transaction.DatabaseConnection.Prepare("INSERT INTO Transaction(userid,action,description,amount,value,date) VALUES(?,?,?,?,?,CURDATE())")
 	defer statement.Close()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -65,6 +64,9 @@ func (transaction *Transaction) Write() bool {
 	}
 	_, err = statement.Exec(transaction.UserID, transaction.Action, transaction.Description, transaction.Amount, transaction.Value)
 	if err != nil {
+		fmt.Println(transaction.UserID)
+		fmt.Println(err.Error())
+		fmt.Println("Transaction | Write | failed")
 		return false
 	}
 	return true

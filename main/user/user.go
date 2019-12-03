@@ -7,13 +7,13 @@ import (
 
 //TODO cleanup code
 type User struct {
-	ID                 int    `json:"id"`
+	ID                 int64  `json:"id"`
 	Username           string `json:"username"`
 	Password           string `json:"email"`
 	Email              string `json:"password"`
 	RegistrationDate   string `json:"registrationDate"`
 	DatabaseConnection *sql.DB
-	Portfolio          Portfolio
+	Portfolio          Portfolio `json:"portfolio"`
 }
 
 type AccessToken struct {
@@ -67,7 +67,7 @@ func (user *User) Authenticate() (bool, string) {
 	password_auth := NewPasswordValidator(user.Password)
 	isValidPassword := password_auth.comparePasswords(password_hash)
 	if isValidPassword == true {
-		return true, "1"
+		return true, "Success"
 	}
 	return false, "Ungültiges Passwort"
 }

@@ -80,6 +80,7 @@ CREATE TABLE User
                                 current_value Decimal
                                         (15,4),
                                 total_stocks INTEGER,
+                                balance Decimal(15,4),
                                 start_capital Decimal
                                         (15,4),
                                 PRIMARY KEY
@@ -87,17 +88,28 @@ CREATE TABLE User
                                 FOREIGN KEY
                                         (user_id) REFERENCES User
                                         (id)
-                        );
+                                );
 
-                                        CREATE TABLE portfolio_item
-                                        (
-                                                id INTEGER
-                                                AUTO_INCREMENT,
+                                CREATE TABLE portfolio_item
+                                (
+                                        id INTEGER
+                                        AUTO_INCREMENT,
                                 stock_id INTEGER,
                                 buy_price Decimal
                                                 (10,4),
                                 buy_date_time DATETIME,
                                 quantity INTEGER,
                                 total_buy_price Decimal
-                                                (10,4),
+                                        (10,4),
+                                         PRIMARY KEY (id),
+                                        FOREIGN KEY (stock_id) REFERENCES stock(id)
                                 );
+
+                        CREATE TABLE portfolio_to_item(
+                                id INTEGER AUTO_INCREMENT,
+                                portfolio_id INTEGER,
+                                portfolio_item_id INTEGER,
+                                PRIMARY KEY (id),
+                                FOREIGN KEY (portfolio_id) REFERENCES Portfolio(id),
+                                 FOREIGN KEY (portfolio_item_id) REFERENCES portfolio_item(id)
+                        );
