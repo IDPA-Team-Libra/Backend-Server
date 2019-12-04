@@ -135,9 +135,8 @@ func Register(w http.ResponseWriter, r *http.Request) {
 				response = GenerateTokenForUser(currentUser.Username, w)
 			}
 			response.Message = "Success"
-			user_id := user_instance.GetUserIdByUsername(user_instance.Username)
 			portfolio := user.Portfolio{}
-			portfolio.Write(user_id, user_instance, 5000.0)
+			//portfolio.Write(user_id, user_instance, 5000.0)
 			currentUser.Password = ""
 			currentUser.Portfolio = SerializedPortfolio{
 				CurrentValue: portfolio.CurrentValue.String(),
