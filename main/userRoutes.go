@@ -73,6 +73,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp)
 }
 
+const (
+	START_CAPITAL = 100000
+)
+
 type Claims struct {
 	Username string `json:"username"`
 	jwt.StandardClaims
@@ -121,7 +125,8 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 	user_instance := user.CreateUserInstance(currentUser.Username, currentUser.Password, currentUser.Email)
 	user_instance.SetDatabaseConnection(database)
-	if user_instance.IsUniqueUsername() == true {
+	uniqueUsername := user_instance.IsUniqueUsername()
+	if uniqueUsername == true {
 		success, error_message := user_instance.CreationSetup()
 		if success == false {
 			fmt.Println(error_message)
@@ -135,14 +140,14 @@ func Register(w http.ResponseWriter, r *http.Request) {
 				response = GenerateTokenForUser(currentUser.Username, w)
 			}
 			response.Message = "Success"
+			user_id := user_instance.GetUserIdByUsername(user_instance.Username)
 			portfolio := user.Portfolio{}
-			//portfolio.Write(user_id, user_instance, 5000.0)
+			portfolio.Write(user_id, user_instance, START_CAPITAL)
 			currentUser.Password = ""
 			currentUser.Portfolio = SerializedPortfolio{
 				CurrentValue: portfolio.CurrentValue.String(),
 				StartCapital: portfolio.StartCapital.String(),
 			}
-			fmt.Println(currentUser.Portfolio)
 			user_data, _ := json.Marshal(currentUser)
 			response.UserData = string(user_data)
 			resp, err := json.Marshal(response)
@@ -154,7 +159,8 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			w.Write(resp)
 		}
 	} else {
-		w.Write([]byte("Benutzername bereits vergeben"))
+		responseObject, _ := json.Marshal("Benutzername bereits vergeben")
+		w.Write(responseObject)
 	}
 }
 

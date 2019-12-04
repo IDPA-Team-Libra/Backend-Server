@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"net/http"
 
+	"github.com/Liberatys/libra-back/main/stock"
 	"github.com/Liberatys/libra-back/main/transaction"
 	"github.com/Liberatys/libra-back/main/user"
 )
@@ -16,7 +17,7 @@ type TransactionRequest struct {
 	Username           string `json:"username"`
 	StockSymbol        string `json:"stockSymbol"`
 	Operation          string `json:"operation"`
-	Amount             int    `json:"amount"`
+	Amount             int64  `json:"amount"`
 	Date               string `json:"date"`
 	ExpectedStockPrice string `json:"expectedStockPrice"`
 }
@@ -33,7 +34,6 @@ type FutureTransactionOption struct {
 	SetDate            string             `json:"setDate"`
 }
 
-// TODO: Alessandro macht die Einschreibunng in die Datenbank
 func AddTransaction(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -53,13 +53,15 @@ func AddTransaction(w http.ResponseWriter, r *http.Request) {
 	currentUser.SetDatabaseConnection(database)
 	userID := currentUser.GetUserIdByUsername(request.Username)
 	currentUser.ID = userID
-	if userID < 0 {
+	if userID <= 0 {
 		fmt.Println("Invalud userID")
 		return
 	}
 	portfolio := user.LoadPortfolio(currentUser)
+	fmt.Println(portfolio)
 	totalPrice := new(big.Float)
-	totalPrice, _ = totalPrice.SetString(request.ExpectedStockPrice)
+	requestedStock := loadStockInstance(request.StockSymbol)
+	totalPrice, _ = totalPrice.SetString(requestedStock.Price)
 	amount := float64(request.Amount)
 	totalPrice = totalPrice.Mul(totalPrice, big.NewFloat(amount))
 	if portfolio.Balance.Cmp(totalPrice) != 1 {
@@ -79,6 +81,7 @@ func AddTransaction(w http.ResponseWriter, r *http.Request) {
 	transaction := transaction.NewTransaction(userID, request.Operation, "", request.Amount, request.ExpectedStockPrice, request.Date)
 	transaction.DatabaseConnection = database
 	transaction.Write()
+	createPortfolioItem(portfolio, requestedStock, currentUser, request.Amount, *totalPrice)
 	/*
 		TODO create portfolio_item and add to portfolio as well as reduction of balance on user
 	*/
@@ -92,6 +95,28 @@ func AddTransaction(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(obj))
 }
 
-func AddDelayedTransaction(w http.ResponseWriter, r *http.Request) {
+func loadStockInstance(stockSymbol string) stock.Stock {
+	stock := stock.NewStockEntry(stockSymbol, "5")
+	stock.Load()
+	return stock
+}
 
+func createPortfolioItem(portfolio user.Portfolio, stockInstance stock.Stock, currentUser user.User, quantity int64, totalPrice big.Float) {
+	stockID := stockInstance.ID
+	buyPrice := stockInstance.Price
+	totalBuyPrice := totalPrice
+	portfolioItem := user.PortfolioItem{
+		StockID:       stockID,
+		BuyPrice:      buyPrice,
+		Quantity:      quantity,
+		TotalBuyPrice: totalBuyPrice.String(),
+	}
+	portfolioItem.Write(currentUser)
+	newBalanceValue := portfolio.Balance.Sub(&portfolio.Balance, &totalBuyPrice)
+	portfolio.Balance = *newBalanceValue
+	portfolio.TotalStocks += quantity
+	portfolio.Update(currentUser)
+}
+
+func AddDelayedTransaction(w http.ResponseWriter, r *http.Request) {
 }

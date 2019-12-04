@@ -17,10 +17,11 @@ type StubReader struct {
 	Balance      string
 	TotalStocks  int64
 	StartCapital string
+	ID           int64
 }
 
 func LoadPortfolio(user User) Portfolio {
-	statement, err := user.DatabaseConnection.Prepare("SELECT current_value, total_stocks, start_capital,balance FROM Portfolio WHERE user_id = ?")
+	statement, err := user.DatabaseConnection.Prepare("SELECT id,current_value, total_stocks, start_capital,balance FROM Portfolio WHERE user_id = ?")
 	defer statement.Close()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -32,7 +33,8 @@ func LoadPortfolio(user User) Portfolio {
 	defer result.Close()
 	result.Next()
 	var reader StubReader
-	err = result.Scan(&reader.CurrentValue, &reader.TotalStocks, &reader.StartCapital, &reader.Balance)
+	err = result.Scan(&reader.ID, &reader.CurrentValue, &reader.TotalStocks, &reader.StartCapital, &reader.Balance)
+	fmt.Println(reader)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -44,12 +46,13 @@ func ConvertStub(reader StubReader) Portfolio {
 	portfolio.CurrentValue = convertStringToFloat(reader.CurrentValue)
 	portfolio.StartCapital = convertStringToFloat(reader.StartCapital)
 	portfolio.Balance = convertStringToFloat(reader.Balance)
+	portfolio.ID = reader.ID
 	return portfolio
 }
 
 func convertStringToFloat(value string) big.Float {
 	currentVal := new(big.Float)
-	currentVal, _ = currentVal.SetString(value)
+	currentVal.SetString(value)
 	return *currentVal
 }
 
@@ -66,6 +69,23 @@ func (portfolio *Portfolio) Write(userID int64, user User, startCapital float64)
 	}
 	_, err = statement.Exec(userID, startCapital, startCapital, startCapital)
 	if err != nil {
+		return false
+	}
+	return true
+}
+
+func (portfolio *Portfolio) Update(user User) bool {
+	statement, err := user.DatabaseConnection.Prepare("UPDATE Portfolio SET balance = ?, current_value = ?, total_stocks = ? WHERE id = ?")
+	defer statement.Close()
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	fmt.Println(portfolio.Balance.String())
+	fmt.Println(portfolio.CurrentValue.String())
+	_, err = statement.Exec(portfolio.Balance.String(), portfolio.CurrentValue.String(), portfolio.TotalStocks, portfolio.ID)
+	if err != nil {
+		fmt.Println(err.Error())
 		return false
 	}
 	return true
