@@ -44,7 +44,7 @@ func (stock *Stock) IsPresent() bool {
 
 func (stock *Stock) Load() bool {
 	databaseConnection := database
-	statement, err := databaseConnection.Prepare("SELECT id,data,price,company FROM Stock WHERE symbol = ? AND timedata = ?")
+	statement, err := databaseConnection.Prepare("SELECT id,data,price,company FROM stock WHERE symbol = ? AND timedata = ?")
 	if err != nil {
 		return false
 	}

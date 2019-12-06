@@ -94,7 +94,7 @@ func (user *User) IsUniqueUsername() bool {
 }
 
 func (user *User) GetUserIdByUsername(username string) int64 {
-	statement, err := user.DatabaseConnection.Prepare("SELECT id from user WHERE username = ?")
+	statement, err := user.DatabaseConnection.Prepare("SELECT id from User WHERE username = ?")
 	defer statement.Close()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -140,6 +140,7 @@ func (user *User) Write() bool {
 	}
 	_, err = statement.Exec(user.Username, user.Password, user.Email)
 	if err != nil {
+		fmt.Println(err.Error())
 		return false
 	}
 	return true

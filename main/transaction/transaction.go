@@ -11,13 +11,13 @@ type Transaction struct {
 	UserID             int64  `json:"userID"`
 	Action             string `json:"action"`
 	Description        string `json:"description"`
-	Amount             int    `json:"amount"`
+	Amount             int64  `json:"amount"`
 	Value              string `json:"value"`
 	Date               string `json:"date"`
 	DatabaseConnection *sql.DB
 }
 
-func NewTransaction(UserID int64, Action string, Description string, Amount int, Value string, Date string) Transaction {
+func NewTransaction(UserID int64, Action string, Description string, Amount int64, Value string, Date string) Transaction {
 	transaction := Transaction{
 		UserID:      UserID,
 		Action:      Action,

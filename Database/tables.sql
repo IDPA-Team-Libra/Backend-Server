@@ -18,21 +18,21 @@ CREATE TABLE User
         (
                 id INTEGER NOT NULL
                 AUTO_INCREMENT,
-    userID INTEGER NOT NULL,
-    activity varchar
+        userID INTEGER NOT NULL,
+        activity varchar
                 (255),
-    accurance datetime,
-    status varchar
+        accurance datetime,
+        status varchar
                 (255),
-    PRIMARY KEY
+        PRIMARY KEY
                 (id),
-    FOREIGN KEY
+        FOREIGN KEY
                 (userID) REFERENCES User
                 (id)
-);
+        );
 
 
-                CREATE TABLE Transaction
+                CREATE TABLE transaction
                 (
                         id INTEGER NOT NULL
                         AUTO_INCREMENT,

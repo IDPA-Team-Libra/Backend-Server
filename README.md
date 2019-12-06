@@ -1,7 +1,3 @@
-
-
-
-
 TODO: 
     * Rewrite code to be modular
     * Write tests for all units
