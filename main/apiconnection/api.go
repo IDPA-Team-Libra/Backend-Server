@@ -3,6 +3,9 @@ package apiconnection
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
 	"sync"
 	"time"
 
@@ -11,27 +14,65 @@ import (
 	"github.com/robfig/cron"
 )
 
+type AlphaVantageRespone struct {
+	GlobalQuote struct {
+		Symbol           string `json:"symbol"`
+		Open             string `json:"open"`
+		High             string `json:"high"`
+		Low              string `json:"low"`
+		Price            string `json:"price"`
+		Volume           string `json:"volume"`
+		LatestTradingDay string `json:"latest trading day"`
+		PreviousClose    string `json:"previous close"`
+		Change           string `json:"change"`
+		ChangePercent    string `json:"change percent"`
+	} `json:"Global Quote"`
+}
+
 //TODO hide api_key
 const APIKEY = "CG96DXD2YPARDLMX"
 
 func GetStockDataForSymbol(recovered_stock stock.Stock, interval av.TimeInterval) (stock.Stock, bool) {
-	client := av.NewClient(APIKEY)
-	result, err := client.StockTimeSeriesIntraday(interval, recovered_stock.Symbol)
+	// client := av.NewClient(APIKEY)
+	// result, err := client.StockTimeSeriesIntraday(interval, recovered_stock.Symbol)
+
+	AlphaVantageRespone := AlphaVantageRespone{}
+
+	httpClient := &http.Client{Timeout: 10 * time.Second}
+	result, err := httpClient.Get("https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=" + recovered_stock.Symbol + "&apikey=" + APIKEY)
+
 	if err != nil {
 		fmt.Println(err.Error())
 		return stock.Stock{}, false
 	}
-	if len(result) == 0 {
+
+	body, readErr := ioutil.ReadAll(result.Body)
+	if readErr != nil {
+		log.Fatal(readErr)
+	}
+
+	err = json.Unmarshal(body, &AlphaVantageRespone)
+
+	if err != nil {
+		fmt.Println(err)
 		return recovered_stock, false
 	}
-	price := fmt.Sprintf("%.3f", result[0].Close)
-	pagesJson, err := json.Marshal(result)
-	if err != nil {
-		return stock.Stock{}, false
-	}
-	recovered_stock.Price = price
-	recovered_stock.Data = string(pagesJson)
+
+	recovered_stock.Price = AlphaVantageRespone.GlobalQuote.Price
+	/*
+		if len(result) == 0 {
+			return recovered_stock, false
+		}
+		price := fmt.Sprintf("%.3f", result[0].Close)
+		pagesJson, err := json.Marshal(result)
+		if err != nil {
+			return stock.Stock{}, false
+		}
+		recovered_stock.Price = price
+		recovered_stock.Data = string(pagesJson)
+	*/
 	return recovered_stock, true
+
 }
 
 var wg sync.WaitGroup

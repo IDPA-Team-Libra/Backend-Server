@@ -2,9 +2,9 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 
 	"github.com/Liberatys/Sanctuary/service"
+	"github.com/Liberatys/libra-back/main/apiconnection"
 	"github.com/Liberatys/libra-back/main/mail"
 	"github.com/Liberatys/libra-back/main/stock"
 )
@@ -22,7 +22,7 @@ func main() {
 	service := service.NewService("#001", "login", "A login service that handles login for users", "3440")
 	service.DefaultRoutes = false
 	service.ActivateHTTPServer()
-	fmt.Println(service.SetDatabaseInformation("remotemysql.com", "3306", "mysql", "g9g5Tg9Mpv", "1PoiRVjymp", "g9g5Tg9Mpv"))
+	service.SetDatabaseInformation("remotemysql.com", "3306", "mysql", "g9g5Tg9Mpv", "1PoiRVjymp", "g9g5Tg9Mpv")
 	database = service.GetDatabaseConnection()
 	setDatabaseReferences(database)
 	//apiconnection.GetStockDataForSymbol("TSLA", av.TimeIntervalFiveMinute)
@@ -39,7 +39,7 @@ func main() {
 	/*
 		END SPACE FOR ROUTES
 	*/
-	//go apiconnection.LoadAllStocks("5")
+	go apiconnection.LoadAllStocks("5")
 	service.StartHTTPServer()
 }
 
