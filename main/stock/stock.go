@@ -84,3 +84,21 @@ func (stock *Stock) Store() bool {
 	}
 	return true
 }
+
+func (stock *Stock) GetSymbolByID(id int64) string {
+	databaseConnection := database
+	statement, err := databaseConnection.Prepare("SELECT symbol FROM stock WHERE id = ? AND timedata = ?")
+	if err != nil {
+		fmt.Println(err.Error())
+		return ""
+	}
+	defer statement.Close()
+	result, err := statement.Query(id, "5")
+	if err != nil {
+		return ""
+	}
+	defer result.Close()
+	result.Next()
+	result.Scan(&stock.Symbol)
+	return stock.Symbol
+}

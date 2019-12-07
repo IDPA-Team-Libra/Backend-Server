@@ -6,10 +6,31 @@ import (
 	av "github.com/cmckee-dev/go-alpha-vantage"
 )
 
+func LoadStocksForRoute(timeSeries string) []Stock {
+	database_connection := database
+	var stocks []Stock
+	statement, err := database_connection.Prepare("SELECT id,symbol,timeData FROM stock where timeData = ? AND price NOT LIKE ''")
+	defer statement.Close()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	result, err := statement.Query(timeSeries)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	defer result.Close()
+	for result.Next() {
+		var stock Stock
+		result.Scan(&stock.ID, &stock.Symbol, &stock.TimeData)
+		stocks = append(stocks, stock)
+	}
+	return stocks
+}
+
 func LoadAllStockSymbols(timeSeries string) []Stock {
 	database_connection := database
 	var stocks []Stock
-	statement, err := database_connection.Prepare("SELECT id,symbol,timeData FROM stock where timeData = ?")
+	statement, err := database_connection.Prepare("SELECT id,symbol,timeData FROM stock where timeData = ? AND last_query < NOW() - INTERVAL 10 MINUTE")
 	defer statement.Close()
 	if err != nil {
 		fmt.Println(err.Error())

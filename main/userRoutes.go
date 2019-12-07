@@ -23,9 +23,10 @@ type User struct {
 }
 
 type SerializedPortfolio struct {
-	CurrentValue string `json:"currentValue"`
-	Stocks       string `json:"stocks"`
-	StartCapital string `json:"startCapital"`
+	CurrentValue string               `json:"currentValue"`
+	Stocks       string               `json:"stocks"`
+	StartCapital string               `json:"startCapital"`
+	Items        []user.PortfolioItem `json:"items"`
 }
 
 type Auther struct {
@@ -47,6 +48,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 	user_instance := user.CreateUserInstance(currentUser.Username, currentUser.Password, "")
 	user_instance.SetDatabaseConnection(database)
+	user_instance.ID = user_instance.GetUserIdByUsername(user_instance.Username)
 	success, message := user_instance.Authenticate()
 	response := Response{}
 	if success == true {
@@ -63,6 +65,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	currentUser.Portfolio = SerializedPortfolio{
 		CurrentValue: portfolio.CurrentValue.String(),
 		StartCapital: portfolio.StartCapital.String(),
+		Items:        user.LoadUserItems(user_instance),
 	}
 	user_data, _ := json.Marshal(currentUser)
 	response.UserData = string(user_data)

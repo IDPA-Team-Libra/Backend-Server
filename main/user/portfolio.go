@@ -6,11 +6,12 @@ import (
 )
 
 type Portfolio struct {
-	ID           int64     `json:"id"`
-	Balance      big.Float `json:"balance"`
-	CurrentValue big.Float `json:"currentValue"`
-	TotalStocks  int64     `json:"totalStocks"`
-	StartCapital big.Float `json:"startCapital"`
+	ID           int64           `json:"id"`
+	Balance      big.Float       `json:"balance"`
+	CurrentValue big.Float       `json:"currentValue"`
+	TotalStocks  int64           `json:"totalStocks"`
+	StartCapital big.Float       `json:"startCapital"`
+	Items        []PortfolioItem `json:"items"`
 }
 type StubReader struct {
 	CurrentValue string
@@ -81,8 +82,6 @@ func (portfolio *Portfolio) Update(user User) bool {
 		fmt.Println(err.Error())
 		return false
 	}
-	fmt.Println(portfolio.Balance.String())
-	fmt.Println(portfolio.CurrentValue.String())
 	_, err = statement.Exec(portfolio.Balance.String(), portfolio.CurrentValue.String(), portfolio.TotalStocks, portfolio.ID)
 	if err != nil {
 		fmt.Println(err.Error())

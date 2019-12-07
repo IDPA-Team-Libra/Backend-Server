@@ -12,6 +12,8 @@ import (
 	"github.com/Liberatys/libra-back/main/user"
 )
 
+//TODO implement security and user validation for this part of the system
+
 type TransactionRequest struct {
 	AuthToken          string `json:"authToken"`
 	Username           string `json:"username"`
@@ -32,6 +34,36 @@ type TransactionResponse struct {
 type FutureTransactionOption struct {
 	TransactionRequest TransactionRequest `json:"transactionRequest"`
 	SetDate            string             `json:"setDate"`
+}
+
+func GetUserTransaction(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.Write([]byte("Keine Parameter übergeben"))
+		return
+	}
+	var request TransactionRequest
+	err = json.Unmarshal(body, &request)
+	if err != nil {
+		fmt.Println(err.Error())
+		w.Write([]byte("Invalid request format"))
+		return
+	}
+	currentUser := user.User{
+		Username: request.Username,
+	}
+	currentUser.SetDatabaseConnection(database)
+	userID := currentUser.GetUserIdByUsername(request.Username)
+	trans := transaction.Transaction{}
+	trans.DatabaseConnection = database
+	transactions := trans.LoadTransactions(userID)
+	json_obj, err := json.Marshal(transactions)
+	if err != nil {
+		fmt.Println(err.Error())
+		w.Write([]byte("Invalid request format"))
+		return
+	}
+	w.Write(json_obj)
 }
 
 func AddTransaction(w http.ResponseWriter, r *http.Request) {
@@ -58,7 +90,6 @@ func AddTransaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	portfolio := user.LoadPortfolio(currentUser)
-	fmt.Println(portfolio)
 	totalPrice := new(big.Float)
 	requestedStock := loadStockInstance(request.StockSymbol)
 	totalPrice, _ = totalPrice.SetString(requestedStock.Price)
@@ -78,7 +109,7 @@ func AddTransaction(w http.ResponseWriter, r *http.Request) {
 	/*
 		TODO: VALIDATE IF THE USER HAS THE RESSOURCES TO BUY OR SELL A STOCK
 	*/
-	transaction := transaction.NewTransaction(userID, request.Operation, "", request.Amount, request.ExpectedStockPrice, request.Date)
+	transaction := transaction.NewTransaction(userID, request.Operation, request.Operation+" "+request.StockSymbol, request.Amount, request.ExpectedStockPrice, request.Date)
 	transaction.DatabaseConnection = database
 	transaction.Write()
 	createPortfolioItem(portfolio, requestedStock, currentUser, request.Amount, *totalPrice)
@@ -101,6 +132,8 @@ func loadStockInstance(stockSymbol string) stock.Stock {
 	return stock
 }
 
+//TODO implement transaction and rollback for all the queries below
+
 func createPortfolioItem(portfolio user.Portfolio, stockInstance stock.Stock, currentUser user.User, quantity int64, totalPrice big.Float) {
 	stockID := stockInstance.ID
 	buyPrice := stockInstance.Price
@@ -116,6 +149,15 @@ func createPortfolioItem(portfolio user.Portfolio, stockInstance stock.Stock, cu
 	portfolio.Balance = *newBalanceValue
 	portfolio.TotalStocks += quantity
 	portfolio.Update(currentUser)
+	connectPortfolioItemWithPortfolio(portfolio, portfolioItem, currentUser)
+}
+
+func connectPortfolioItemWithPortfolio(portfolio user.Portfolio, item user.PortfolioItem, currentUser user.User) bool {
+	portfolioConnection := user.PortfolioToItem{
+		PortfolioID:     portfolio.ID,
+		PortfolioItemID: item.ID,
+	}
+	return portfolioConnection.Write(currentUser)
 }
 
 func AddDelayedTransaction(w http.ResponseWriter, r *http.Request) {

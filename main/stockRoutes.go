@@ -23,7 +23,7 @@ func GetStocks(w http.ResponseWriter, r *http.Request) {
 		w.Write(stock_string)
 		return
 	}
-	stocks := stock.LoadAllStockSymbols("5")
+	stocks := stock.LoadStocksForRoute("5")
 	for key := range stocks {
 		stocks[key].Load()
 	}

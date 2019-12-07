@@ -95,19 +95,19 @@ CREATE TABLE User
                                         (
                                                 id INTEGER
                                                 AUTO_INCREMENT,
-                                stock_id INTEGER,
-                                buy_price Decimal
+                                        stock_id INTEGER,
+                                        buy_price Decimal
                                                 (10,4),
-                                buy_date_time DATETIME,
-                                quantity INTEGER,
-                                total_buy_price Decimal
+                                        buy_date_time DATETIME,
+                                        quantity INTEGER,
+                                        total_buy_price Decimal
                                                 (10,4),
                                          PRIMARY KEY
                                                 (id),
                                         FOREIGN KEY
                                                 (stock_id) REFERENCES stock
                                                 (id)
-                                );
+                                        );
 
                                                 CREATE TABLE portfolio_to_item
                                                 (

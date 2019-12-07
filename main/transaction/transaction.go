@@ -29,28 +29,24 @@ func NewTransaction(UserID int64, Action string, Description string, Amount int6
 	return transaction
 }
 
-func (transaction *Transaction) LoadTransactions(userID int) []Transaction {
+func (transaction *Transaction) LoadTransactions(userID int64) []Transaction {
 	var transactions []Transaction
-	statement, err := transaction.DatabaseConnection.Prepare("SELECT action,description,amount,value,date FROM Transaction WHERE userid = ?")
+	statement, err := transaction.DatabaseConnection.Prepare("SELECT action,description,amount,value,date FROM transaction WHERE userID = ?")
 	defer statement.Close()
 	if err != nil {
 		fmt.Println(err.Error())
-		return nil
+		return transactions
 	}
-	result, err := statement.Query(transaction.UserID)
+	result, err := statement.Query(userID)
 	if err != nil {
 		fmt.Println(err.Error())
+		return transactions
 	}
 	defer result.Close()
-	for {
+	for result.Next() {
 		var trans Transaction
-		result.Next()
 		result.Scan(&trans.Action, &trans.Description, &trans.Amount, &trans.Value, &trans.Date)
-		if trans.Action == "" {
-			break
-		} else {
-			transactions = append(transactions, trans)
-		}
+		transactions = append(transactions, trans)
 	}
 	return transactions
 }
@@ -64,7 +60,6 @@ func (transaction *Transaction) Write() bool {
 	}
 	_, err = statement.Exec(transaction.UserID, transaction.Action, transaction.Description, transaction.Amount, transaction.Value)
 	if err != nil {
-		fmt.Println(transaction.UserID)
 		fmt.Println(err.Error())
 		fmt.Println("Transaction | Write | failed")
 		return false
