@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/Liberatys/libra-back/main/mail"
@@ -16,10 +17,11 @@ var jwtKey = []byte("PLACEHOLDER")
 var mailer mail.Mail
 
 type User struct {
-	Username  string              `json:"username"`
-	Password  string              `json:"password"`
-	Email     string              `json:"email"`
-	Portfolio SerializedPortfolio `json:"portfolio"`
+	Username     string              `json:"username"`
+	Password     string              `json:"password"`
+	Email        string              `json:"email"`
+	StartBalance string              `json:"startBalance"`
+	Portfolio    SerializedPortfolio `json:"portfolio"`
 }
 
 type SerializedPortfolio struct {
@@ -46,6 +48,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Invalid json"))
 		return
 	}
+	fmt.Println(currentUser)
 	user_instance := user.CreateUserInstance(currentUser.Username, currentUser.Password, "")
 	user_instance.SetDatabaseConnection(database)
 	user_instance.ID = user_instance.GetUserIdByUsername(user_instance.Username)
@@ -145,7 +148,14 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			response.Message = "Success"
 			user_id := user_instance.GetUserIdByUsername(user_instance.Username)
 			portfolio := user.Portfolio{}
-			portfolio.Write(user_id, user_instance, START_CAPITAL)
+			var accountStartBalance float64
+			// if no value is set for the start balance, just take 100000 as a fall backnumber
+			if currentUser.StartBalance == "" {
+				accountStartBalance = 100000.0
+			} else {
+				accountStartBalance, _ = strconv.ParseFloat(currentUser.StartBalance, 64)
+			}
+			portfolio.Write(user_id, user_instance, accountStartBalance)
 			currentUser.Password = ""
 			currentUser.Portfolio = SerializedPortfolio{
 				CurrentValue: portfolio.CurrentValue.String(),

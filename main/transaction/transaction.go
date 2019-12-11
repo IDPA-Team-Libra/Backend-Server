@@ -51,14 +51,23 @@ func (transaction *Transaction) LoadTransactions(userID int64) []Transaction {
 	return transactions
 }
 
-func (transaction *Transaction) Write() bool {
-	statement, err := transaction.DatabaseConnection.Prepare("INSERT INTO Transaction(userid,action,description,amount,value,date) VALUES(?,?,?,?,?,CURDATE())")
+func (transaction *Transaction) Write(processed bool) bool {
+	insertionSequence := "INSERT INTO Transaction(userid,action,description,amount,value,processed,date) VALUES(?,?,?,?,?,?,CURDATE())"
+	if processed == false {
+		insertionSequence = "INSERT INTO Transaction(userid,action,description,amount,value,processed,date) VALUES(?,?,?,?,?,?,?)"
+	}
+	statement, err := transaction.DatabaseConnection.Prepare(insertionSequence)
 	defer statement.Close()
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
 	}
-	_, err = statement.Exec(transaction.UserID, transaction.Action, transaction.Description, transaction.Amount, transaction.Value)
+	if processed == false {
+		_, err = statement.Exec(transaction.UserID, transaction.Action, transaction.Description, transaction.Amount, transaction.Value, processed, transaction.Date)
+	} else {
+		_, err = statement.Exec(transaction.UserID, transaction.Action, transaction.Description, transaction.Amount, processed, transaction.Value)
+	}
+
 	if err != nil {
 		fmt.Println(err.Error())
 		fmt.Println("Transaction | Write | failed")
