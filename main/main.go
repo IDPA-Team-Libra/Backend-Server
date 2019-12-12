@@ -2,9 +2,9 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 
 	"github.com/Liberatys/Sanctuary/service"
+	"github.com/Liberatys/libra-back/main/apiconnection"
 	"github.com/Liberatys/libra-back/main/mail"
 	"github.com/Liberatys/libra-back/main/stock"
 )
@@ -22,8 +22,7 @@ func main() {
 	service := service.NewService("#001", "login", "A login service that handles login for users", "3440")
 	service.DefaultRoutes = false
 	service.ActivateHTTPServer()
-	service.SetDatabaseInformation("remotemysql.com", "3306", "mysql", "g9g5Tg9Mpv", "1PoiRVjymp", "g9g5Tg9Mpv")
-	fmt.Println(service.SetDatabaseInformation("localhost", "3306", "mysql", "root", "Siera_001_DB", "libra"))
+	service.SetDatabaseInformation("localhost", "3306", "mysql", "root", "pw123", "libra")
 	database = service.GetDatabaseConnection()
 	setDatabaseReferences(database)
 	mailer = mail.NewMail("mountainviewcasino@gmail.com", "1234", "Wir heissen Sie herzlich bei Libra wilkommen", "Welcome to libra")
@@ -40,7 +39,7 @@ func main() {
 	/*
 		END SPACE FOR ROUTES
 	*/
-	//go apiconnection.LoadAllStocks("5")
+	go apiconnection.LoadAllStocks("5")
 	service.StartHTTPServer()
 }
 
