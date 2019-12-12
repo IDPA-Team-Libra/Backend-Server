@@ -66,6 +66,7 @@ func (user *User) Authenticate() (bool, string) {
 	}
 	password_auth := NewPasswordValidator(user.Password)
 	isValidPassword := password_auth.comparePasswords(password_hash)
+
 	if isValidPassword == true {
 		return true, "Success"
 	}

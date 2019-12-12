@@ -45,6 +45,7 @@ CREATE TABLE User
     value Decimal
                         (10,4),
     date date,
+    processed boolean,
     PRIMARY KEY
                         (id),
     FOREIGN KEY

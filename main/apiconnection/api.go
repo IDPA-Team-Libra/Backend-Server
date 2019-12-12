@@ -15,7 +15,6 @@ const APIKEY = "F1HqA-xHQe7tzNYtFf26"
 
 func GetStockDataForSymbol(recovered_stock stock.Stock, interval av.TimeInterval) (stock.Stock, bool) {
 	quandl.APIKey = APIKEY
-	fmt.Println(recovered_stock.Symbol)
 	data, err := quandl.GetSymbol("WIKI/"+recovered_stock.Symbol, nil)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -36,13 +35,15 @@ var max_routines int64
 // TODO check if it only executes given max_routines at a time
 func LoadAllStocks(timeInterval string) {
 	max_routines = 1
+	var current_wait_group int64
 	var stocks []stock.Stock
+
 	stocks = stock.LoadAllStockSymbols(timeInterval)
 	for _, value := range stocks {
 		wg.Add(1)
 		current_wait_group += 1
-		go LoadAndStoreStock(value)
-		if current_wait_group >= max_routines {
+		LoadAndStoreStock(value)
+		if current_wait_group == max_routines {
 			current_wait_group = 0
 			wg.Wait()
 		}

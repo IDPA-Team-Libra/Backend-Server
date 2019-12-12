@@ -1,6 +1,6 @@
 package mail
 
-import "gopkg.in/gomail.v2"
+import "github.com/go-gomail/gomail"
 
 //TODO implement mailer template
 type Mail struct {

@@ -9,7 +9,7 @@ import (
 func LoadStocksForRoute(timeSeries string) []Stock {
 	database_connection := database
 	var stocks []Stock
-	statement, err := database_connection.Prepare("SELECT id,symbol,timeData FROM stock where timeData = ? AND price NOT LIKE ''")
+	statement, err := database_connection.Prepare("SELECT id,symbol,timeData FROM stock where timeData = ? AND price NOT LIKE '' ")
 	defer statement.Close()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -30,7 +30,7 @@ func LoadStocksForRoute(timeSeries string) []Stock {
 func LoadAllStockSymbols(timeSeries string) []Stock {
 	database_connection := database
 	var stocks []Stock
-	statement, err := database_connection.Prepare("SELECT id,symbol,timeData FROM stock where timeData = ? AND last_query < NOW() - INTERVAL 10 MINUTE")
+	statement, err := database_connection.Prepare("SELECT id,symbol,timeData FROM stock where timeData = ?")
 	defer statement.Close()
 	if err != nil {
 		fmt.Println(err.Error())
