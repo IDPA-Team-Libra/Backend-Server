@@ -48,7 +48,6 @@ func GetUserTransaction(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Invalid request format"))
 		return
 	}
-	fmt.Println(request)
 	currentUser := user.User{
 		Username: request.Username,
 	}
@@ -64,6 +63,95 @@ func GetUserTransaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write(json_obj)
+}
+
+func RemoveTransaction(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.Write([]byte("Keine Parameter übergeben"))
+		return
+	}
+	var request TransactionRequest
+	err = json.Unmarshal(body, &request)
+	if err != nil {
+		fmt.Println(err.Error())
+		w.Write([]byte("Invalid request format"))
+		return
+	}
+	currentUser := user.User{
+		Username: request.Username,
+	}
+	user_instance := user.CreateUserInstance(currentUser.Username, currentUser.Password, "")
+	user_instance.SetDatabaseConnection(database)
+	user_instance.ID = user_instance.GetUserIdByUsername(request.Username)
+	requestedStock := loadStockInstance(request.StockSymbol)
+	items := user.LoadUserItems(user_instance, request.StockSymbol)
+	totalStockQuantity := calculateTotalStocks(items)
+	requestCount := request.Amount
+	if totalStockQuantity < requestCount {
+		response := TransactionResponse{
+			Message:   "Sie können nicht mehr Aktien verkaufen als sie haben",
+			State:     "Failed",
+			Title:     "Verkauf konnte nicht durchgeführt werden",
+			Operation: "-",
+		}
+		obj, _ := json.Marshal(response)
+		w.Write([]byte(obj))
+		return
+	}
+	for index, _ := range items {
+		if requestCount > 0 {
+			quantity := items[index].Quantity
+			if quantity <= requestCount {
+				requestCount -= quantity
+				items[index].Quantity = 0
+				items[index].Remove(user_instance)
+			} else {
+				items[index].Quantity -= requestCount
+				requestCount = 0
+				items[index].Update(user_instance)
+				break
+			}
+		} else {
+			break
+		}
+	}
+	transaction := transaction.NewTransaction(user_instance.ID, request.Operation, request.Operation+" "+request.StockSymbol, request.Amount, requestedStock.Price, request.Date)
+	transaction.DatabaseConnection = database
+	transaction.Write(true)
+	portfolio := user.LoadPortfolio(user_instance)
+	portfolio.TotalStocks -= request.Amount
+	s := fmt.Sprintf("%f", float64(request.Amount))
+	additionalBalance := multiplyString(s, requestedStock.Price)
+	portfolio.Balance = *portfolio.Balance.Add(&portfolio.Balance, additionalBalance)
+	portfolio.CurrentValue = *portfolio.CurrentValue.Sub(&portfolio.CurrentValue, additionalBalance)
+	portfolio.Update(user_instance)
+	response := TransactionResponse{
+		Message:   "Verkauf wurde getätigt",
+		State:     "Success",
+		Title:     "Aktien wurden verkauf und ihrem Konto gutgeschrieben",
+		Operation: "-",
+	}
+	obj, _ := json.Marshal(response)
+	w.Write([]byte(obj))
+	return
+}
+
+func multiplyString(first, second string) *big.Float {
+	firstFloat := new(big.Float)
+	firstFloat.SetString(first)
+	secondFloat := new(big.Float)
+	firstFloat, _ = firstFloat.SetString(first)
+	secondFloat, _ = secondFloat.SetString(second)
+	return firstFloat.Mul(firstFloat, secondFloat)
+}
+
+func calculateTotalStocks(items []user.PortfolioItem) int64 {
+	var counter int64
+	for _, stock := range items {
+		counter += stock.Quantity
+	}
+	return counter
 }
 
 func AddTransaction(w http.ResponseWriter, r *http.Request) {
@@ -82,7 +170,6 @@ func AddTransaction(w http.ResponseWriter, r *http.Request) {
 	currentUser := user.User{
 		Username: request.Username,
 	}
-	fmt.Println(request)
 	currentUser.SetDatabaseConnection(database)
 	userID := currentUser.GetUserIdByUsername(request.Username)
 	currentUser.ID = userID
@@ -110,7 +197,7 @@ func AddTransaction(w http.ResponseWriter, r *http.Request) {
 	/*
 		TODO: VALIDATE IF THE USER HAS THE RESSOURCES TO BUY OR SELL A STOCK
 	*/
-	transaction := transaction.NewTransaction(userID, request.Operation, request.Operation+" "+request.StockSymbol, request.Amount, request.ExpectedStockPrice, request.Date)
+	transaction := transaction.NewTransaction(userID, request.Operation, request.Operation+" "+request.StockSymbol, request.Amount, requestedStock.Price, request.Date)
 	transaction.DatabaseConnection = database
 	transaction.Write(true)
 	createPortfolioItem(portfolio, requestedStock, currentUser, request.Amount, *totalPrice)
@@ -134,7 +221,6 @@ func loadStockInstance(stockSymbol string) stock.Stock {
 }
 
 //TODO implement transaction and rollback for all the queries below
-
 func createPortfolioItem(portfolio user.Portfolio, stockInstance stock.Stock, currentUser user.User, quantity int64, totalPrice big.Float) {
 	stockID := stockInstance.ID
 	buyPrice := stockInstance.Price
@@ -217,7 +303,9 @@ func AddDelayedTransaction(w http.ResponseWriter, r *http.Request) {
 
 func updatePortfolio(portfolio user.Portfolio, totalPrice big.Float, quantity int64, currentUser user.User) {
 	newBalanceValue := portfolio.Balance.Sub(&portfolio.Balance, &totalPrice)
+	newCurrentValue := portfolio.CurrentValue.Add(&portfolio.CurrentValue, &totalPrice)
 	portfolio.Balance = *newBalanceValue
+	portfolio.CurrentValue = *newCurrentValue
 	portfolio.TotalStocks += quantity
 	portfolio.Update(currentUser)
 }

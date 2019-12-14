@@ -4,7 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/Liberatys/Sanctuary/service"
-	"github.com/Liberatys/libra-back/main/apiconnection"
+	_ "github.com/Liberatys/libra-back/main/apiconnection"
 	"github.com/Liberatys/libra-back/main/mail"
 	"github.com/Liberatys/libra-back/main/stock"
 	"github.com/Liberatys/libra-back/main/user"
@@ -19,7 +19,7 @@ var database *sql.DB
 //! Refactor written code and make it more modular
 
 const (
-	EX_MODE = "FALSE"
+	EX_MODE = "TEST"
 )
 
 func main() {
@@ -27,7 +27,7 @@ func main() {
 	service := service.NewService("#001", "login", "A login service that handles login for users", "3440")
 	service.DefaultRoutes = false
 	service.ActivateHTTPServer()
-	service.SetDatabaseInformation("localhost", "3306", "mysql", "root", "pw123", "libra")
+	service.SetDatabaseInformation("localhost", "3306", "mysql", "root", "Siera_001_DB", "libra")
 	database = service.GetDatabaseConnection()
 	setDatabaseReferences(database)
 	mailer = mail.NewMail("mountainviewcasino@gmail.com", "1234", "Wir heissen Sie herzlich bei Libra wilkommen", "Welcome to libra")
@@ -47,12 +47,14 @@ func main() {
 	service.AddHTTPRoute("/user/register", Register)
 	service.AddHTTPRoute("/stock/all", GetStocks)
 	service.AddHTTPRoute("/transaction/buy", AddTransaction)
+	service.AddHTTPRoute("/transaction/sell", RemoveTransaction)
 	service.AddHTTPRoute("/transaction/buy/delayed", AddDelayedTransaction)
 	service.AddHTTPRoute("/transaction/all", GetUserTransaction)
+	service.AddHTTPRoute("/portfolio/get", GetPortfolio)
 	/*
 		END SPACE FOR ROUTES
 	*/
-	go apiconnection.LoadAllStocks("5")
+	//go apiconnection.LoadAllStocks("5")
 	service.StartHTTPServer()
 }
 
