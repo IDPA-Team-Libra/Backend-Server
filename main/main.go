@@ -30,7 +30,7 @@ func main() {
 	service.SetDatabaseInformation("localhost", "3306", "mysql", "root", "pw123", "libra")
 	database = service.GetDatabaseConnection()
 	setDatabaseReferences(database)
-	mailer = mail.NewMail("mountainviewcasino@gmail.com", "1234", "Wir heissen Sie herzlich bei Libra wilkommen", "Welcome to libra")
+	mailer = mail.NewMail("mountainviewcasino@gmail.com", "1234", "Wir heissen Sie herzlich bei Libra willkommen", "Welcome to libra")
 	/*
 		SPACE FOR ROUTES
 	*/
