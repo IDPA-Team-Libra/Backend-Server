@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"net/http"
 
+	"github.com/Liberatys/libra-back/main/logger"
 	"github.com/Liberatys/libra-back/main/sec"
 	"github.com/Liberatys/libra-back/main/stock"
 	"github.com/Liberatys/libra-back/main/transaction"
@@ -54,6 +55,7 @@ func GetUserTransaction(w http.ResponseWriter, r *http.Request) {
 	}
 	validator := sec.NewValidator(request.AuthToken, currentUser.Username)
 	if validator.IsValidToken(jwtKey) == false {
+		logger.LogMessage(fmt.Sprintf("Anfrage an GetUserTransaction hatte einen ungültigen jwt. | User: %s", currentUser.Username), logger.WARNING)
 		response := PortfolioContent{}
 		response.Message = "Invalid Token"
 		resp, err := json.Marshal(response)
@@ -71,6 +73,7 @@ func GetUserTransaction(w http.ResponseWriter, r *http.Request) {
 	json_obj, err := json.Marshal(transactions)
 	if err != nil {
 		fmt.Println(err.Error())
+		logger.LogMessage(fmt.Sprintf("Das Request format in einer Anfrage an GetUserTransaction wurde nicht eingehalten | User: %s", currentUser.Username), logger.WARNING)
 		w.Write([]byte("Invalid request format"))
 		return
 	}
@@ -92,6 +95,18 @@ func RemoveTransaction(w http.ResponseWriter, r *http.Request) {
 	}
 	currentUser := user.User{
 		Username: request.Username,
+	}
+	validator := sec.NewValidator(request.AuthToken, request.Username)
+	if validator.IsValidToken(jwtKey) == false {
+		response := TransactionResponse{
+			Message:   "Leider konnten Sie nicht durch den Server authentizifiert werden. Bitte neu einloggen",
+			State:     "Breach",
+			Title:     "Aktion konte nicht ausgeführt werden",
+			Operation: "-",
+		}
+		obj, _ := json.Marshal(response)
+		w.Write([]byte(obj))
+		return
 	}
 	user_instance := user.CreateUserInstance(currentUser.Username, currentUser.Password, "")
 	user_instance.SetDatabaseConnection(database)
@@ -189,6 +204,18 @@ func AddTransaction(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Invalud userID")
 		return
 	}
+	validator := sec.NewValidator(request.AuthToken, request.Username)
+	if validator.IsValidToken(jwtKey) == false {
+		response := TransactionResponse{
+			Message:   "Leider konnten Sie nicht durch den Server authentizifiert werden. Bitte neu einloggen",
+			State:     "Breach",
+			Title:     "Aktion konte nicht ausgeführt werden",
+			Operation: "-",
+		}
+		obj, _ := json.Marshal(response)
+		w.Write([]byte(obj))
+		return
+	}
 	portfolio := user.LoadPortfolio(currentUser)
 	totalPrice := new(big.Float)
 	requestedStock := loadStockInstance(request.StockSymbol)
@@ -265,7 +292,7 @@ func AddDelayedTransaction(w http.ResponseWriter, r *http.Request) {
 	var request TransactionRequest
 	err = json.Unmarshal(body, &request)
 	if err != nil {
-		fmt.Println(err.Error())
+		logger.LogMessage(err.Error(), logger.WARNING)
 		w.Write([]byte("Invalid request format"))
 		return
 	}
@@ -276,7 +303,19 @@ func AddDelayedTransaction(w http.ResponseWriter, r *http.Request) {
 	userID := currentUser.GetUserIdByUsername(request.Username)
 	currentUser.ID = userID
 	if userID <= 0 {
-		fmt.Println("Invalud userID")
+		logger.LogMessage(fmt.Sprintf("Eine Nutzer ID war nicht gültig | User %s", request.Username), logger.WARNING)
+		return
+	}
+	validator := sec.NewValidator(request.AuthToken, request.Username)
+	if validator.IsValidToken(jwtKey) == false {
+		response := TransactionResponse{
+			Message:   "Leider konnten Sie nicht durch den Server authentizifiert werden. Bitte neu einloggen",
+			State:     "Breach",
+			Title:     "Aktion konte nicht ausgeführt werden",
+			Operation: "-",
+		}
+		obj, _ := json.Marshal(response)
+		w.Write([]byte(obj))
 		return
 	}
 	portfolio := user.LoadPortfolio(currentUser)

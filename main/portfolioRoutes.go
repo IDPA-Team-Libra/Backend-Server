@@ -2,11 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
-	"github.com/Liberatys/libra-back/main/sec"
+	"github.com/Liberatys/libra-back/main/logger"
 	"github.com/Liberatys/libra-back/main/transaction"
 	"github.com/Liberatys/libra-back/main/user"
 )
@@ -21,23 +20,14 @@ func GetPortfolio(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.Write([]byte("Keine Parameter übergeben"))
+		logger.LogMessage("Anfrage an Portfolio hatte keine Parameter", logger.INFO)
 		return
 	}
 	var currentUser User
 	err = json.Unmarshal(body, &currentUser)
 	if err != nil {
+		logger.LogMessage("Anfrage an Portfolio hatte invalides JSON", logger.INFO)
 		w.Write([]byte("Invalid json"))
-		return
-	}
-	validator := sec.NewValidator(currentUser.AccessToken, currentUser.Username)
-	if validator.IsValidToken(jwtKey) == false {
-		response := PortfolioContent{}
-		response.Message = "Invalid Token"
-		resp, err := json.Marshal(response)
-		if err != nil {
-			fmt.Println(err.Error())
-		}
-		w.Write(resp)
 		return
 	}
 	user_instance := user.CreateUserInstance(currentUser.Username, currentUser.Password, "")
@@ -54,7 +44,7 @@ func GetPortfolio(w http.ResponseWriter, r *http.Request) {
 	response.Transactions = string(transaction_data)
 	resp, err := json.Marshal(response)
 	if err != nil {
-		fmt.Println(err.Error())
+		logger.LogMessage(err.Error(), logger.WARNING)
 	}
 	w.Write(resp)
 }

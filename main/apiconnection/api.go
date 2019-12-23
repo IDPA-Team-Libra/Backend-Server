@@ -40,7 +40,7 @@ func LoadAllStocks(timeInterval string) {
 	stocks = stock.LoadAllStockSymbols(timeInterval)
 	for _, value := range stocks {
 		fmt.Println(value)
-		wg.Add(1)
+		wg.Add(5)
 		current_wait_group += 1
 		LoadAndStoreStock(value)
 		if current_wait_group == max_routines {
