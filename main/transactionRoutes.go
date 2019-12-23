@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"net/http"
 
+	"github.com/Liberatys/libra-back/main/sec"
 	"github.com/Liberatys/libra-back/main/stock"
 	"github.com/Liberatys/libra-back/main/transaction"
 	"github.com/Liberatys/libra-back/main/user"
@@ -50,6 +51,17 @@ func GetUserTransaction(w http.ResponseWriter, r *http.Request) {
 	}
 	currentUser := user.User{
 		Username: request.Username,
+	}
+	validator := sec.NewValidator(request.AuthToken, currentUser.Username)
+	if validator.IsValidToken(jwtKey) == false {
+		response := PortfolioContent{}
+		response.Message = "Invalid Token"
+		resp, err := json.Marshal(response)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		w.Write(resp)
+		return
 	}
 	currentUser.SetDatabaseConnection(database)
 	userID := currentUser.GetUserIdByUsername(request.Username)

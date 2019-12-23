@@ -6,14 +6,13 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/Liberatys/libra-back/main/mail"
+	"github.com/Liberatys/libra-back/main/sec"
 	"github.com/Liberatys/libra-back/main/user"
-	"github.com/dgrijalva/jwt-go"
 )
 
-var jwtKey = []byte("PLACEHOLDER")
+var jwtKey = []byte("Secret")
 var mailer mail.Mail
 
 type User struct {
@@ -21,6 +20,7 @@ type User struct {
 	Password     string              `json:"password"`
 	Email        string              `json:"email"`
 	StartBalance string              `json:"startBalance"`
+	AccessToken  string              `json:"accessToken"`
 	Portfolio    SerializedPortfolio `json:"portfolio"`
 }
 
@@ -51,9 +51,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	user_instance.SetDatabaseConnection(database)
 	user_instance.ID = user_instance.GetUserIdByUsername(user_instance.Username)
 	success, message := user_instance.Authenticate()
-	response := Response{}
+	response := sec.Response{}
 	if success == true {
-		response = GenerateTokenForUser(currentUser.Username, w)
+		response = GenerateTokenForUser(currentUser.Username)
 	} else {
 		response.Message = message
 		resp, _ := json.Marshal(response)
@@ -77,41 +77,12 @@ func Login(w http.ResponseWriter, r *http.Request) {
 }
 
 const (
-	START_CAPITAL = 100000
+	START_CAPITAL = 1000000
 )
 
-type Claims struct {
-	Username string `json:"username"`
-	jwt.StandardClaims
-}
-type Response struct {
-	Message        string `json:"response"`
-	TokenName      string `json:"tokenName"`
-	Token          string `json:"token"`
-	ExpirationTime int64  `json:"expires"`
-	UserData       string `json:"user"`
-}
-
-func GenerateTokenForUser(username string, w http.ResponseWriter) Response {
-	expirationTime := time.Now().Add(5 * time.Minute)
-	claims := &Claims{
-		Username: username,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expirationTime.Unix(),
-		},
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(jwtKey)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return Response{}
-	}
-	response := Response{
-		TokenName:      "auth_token",
-		Token:          tokenString,
-		ExpirationTime: expirationTime.Unix(),
-	}
-	return response
+func GenerateTokenForUser(username string) sec.Response {
+	creator := sec.TokenCreator{Username: username, Secret: jwtKey}
+	return creator.CreateToken()
 }
 
 func Register(w http.ResponseWriter, r *http.Request) {
@@ -138,9 +109,9 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		if user_instance.Write() == false {
 			w.Write([]byte("Benutzer konnte nicht erstellt werden. Bitte an Kundendienst wenden"))
 		} else {
-			response := Response{}
+			response := sec.Response{}
 			if success == true {
-				response = GenerateTokenForUser(currentUser.Username, w)
+				response = GenerateTokenForUser(currentUser.Username)
 			}
 			response.Message = "Success"
 			user_id := user_instance.GetUserIdByUsername(user_instance.Username)
@@ -174,8 +145,33 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func ValidateToken(w http.ResponseWriter, r *http.Request) {
-
+func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.Write([]byte("Keine Parameter übergeben"))
+		return
+	}
+	var currentUser User
+	err = json.Unmarshal(body, &currentUser)
+	if err != nil {
+		w.Write([]byte("Invalid json"))
+		return
+	}
+	validator := sec.NewValidator(currentUser.AccessToken, currentUser.Username)
+	response := PortfolioContent{}
+	if validator.IsValidToken(jwtKey) == false {
+		response.Message = "Invalid Token"
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+	} else {
+		response.Message = "Valid Token"
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+	}
+	resp, err := json.Marshal(response)
+	w.Write(resp)
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {

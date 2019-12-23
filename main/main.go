@@ -12,12 +12,6 @@ import (
 
 var database *sql.DB
 
-//TODO
-//! Rewrite some of the enitites, like user
-//! Write tests for the entities
-//! Create a model for the backend / class diagramm
-//! Refactor written code and make it more modular
-
 const (
 	EX_MODE = "TEST"
 )
@@ -51,6 +45,7 @@ func main() {
 	service.AddHTTPRoute("/transaction/buy/delayed", AddDelayedTransaction)
 	service.AddHTTPRoute("/transaction/all", GetUserTransaction)
 	service.AddHTTPRoute("/portfolio/get", GetPortfolio)
+	service.AddHTTPRoute("/authenticate/token", ValidateUserToken)
 	/*
 		END SPACE FOR ROUTES
 	*/

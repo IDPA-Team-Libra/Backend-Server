@@ -14,7 +14,7 @@ type Transaction struct {
 	Amount             int64  `json:"amount"`
 	Value              string `json:"value"`
 	Date               string `json:"date"`
-	Processed 		bool `json:"processed"`
+	Processed          bool   `json:"processed"`
 	DatabaseConnection *sql.DB
 }
 
@@ -46,7 +46,7 @@ func (transaction *Transaction) LoadTransactions(userID int64) []Transaction {
 	defer result.Close()
 	for result.Next() {
 		var trans Transaction
-		result.Scan(&trans.Action, &trans.Description, &trans.Amount, &trans.Value, &trans.Date,&trans.Processed)
+		result.Scan(&trans.Action, &trans.Description, &trans.Amount, &trans.Value, &trans.Date, &trans.Processed)
 		transactions = append(transactions, trans)
 	}
 	return transactions
@@ -66,7 +66,7 @@ func (transaction *Transaction) Write(processed bool) bool {
 	if processed == false {
 		_, err = statement.Exec(transaction.UserID, transaction.Action, transaction.Description, transaction.Amount, transaction.Value, processed, transaction.Date)
 	} else {
-		_, err = statement.Exec(transaction.UserID, transaction.Action, transaction.Description, transaction.Amount, transaction.Value,processed)
+		_, err = statement.Exec(transaction.UserID, transaction.Action, transaction.Description, transaction.Amount, transaction.Value, processed)
 	}
 	if err != nil {
 		fmt.Println(err.Error())
