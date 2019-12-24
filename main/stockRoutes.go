@@ -10,7 +10,6 @@ import (
 	"github.com/Liberatys/libra-back/main/stock"
 )
 
-//TODO: Implement the methods required to store the information in angular
 var stock_data []stock.Stock
 var stock_string []byte
 

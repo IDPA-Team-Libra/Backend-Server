@@ -37,10 +37,10 @@ func LoadAllStocks(timeInterval string) {
 	max_routines = 1
 	var current_wait_group int64
 	var stocks []stock.Stock
-
 	stocks = stock.LoadAllStockSymbols(timeInterval)
 	for _, value := range stocks {
-		wg.Add(1)
+		fmt.Println(value)
+		wg.Add(5)
 		current_wait_group += 1
 		LoadAndStoreStock(value)
 		if current_wait_group == max_routines {
@@ -50,7 +50,6 @@ func LoadAllStocks(timeInterval string) {
 	}
 	current_wait_group = 0
 	wg.Wait()
-	fmt.Println("Finished with stock job")
 }
 
 func LoadAndStoreStock(stocking stock.Stock) {

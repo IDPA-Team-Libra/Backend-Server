@@ -35,7 +35,6 @@ func LoadPortfolio(user User) Portfolio {
 	result.Next()
 	var reader StubReader
 	err = result.Scan(&reader.ID, &reader.CurrentValue, &reader.TotalStocks, &reader.StartCapital, &reader.Balance)
-	fmt.Println(reader)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -48,6 +47,7 @@ func ConvertStub(reader StubReader) Portfolio {
 	portfolio.StartCapital = convertStringToFloat(reader.StartCapital)
 	portfolio.Balance = convertStringToFloat(reader.Balance)
 	portfolio.ID = reader.ID
+	portfolio.TotalStocks = reader.TotalStocks
 	return portfolio
 }
 
@@ -59,7 +59,7 @@ func convertStringToFloat(value string) big.Float {
 
 func (portfolio *Portfolio) Write(userID int64, user User, startCapital float64) bool {
 	portfolio.ID = userID
-	portfolio.CurrentValue = *big.NewFloat(startCapital)
+	portfolio.CurrentValue = *big.NewFloat(0.0)
 	portfolio.TotalStocks = 0
 	portfolio.StartCapital = *big.NewFloat(startCapital)
 	statement, err := user.DatabaseConnection.Prepare("INSERT INTO Portfolio(user_id, current_value,total_stocks,start_capital,balance) VALUES(?,?,0,?,?)")
@@ -68,7 +68,7 @@ func (portfolio *Portfolio) Write(userID int64, user User, startCapital float64)
 		fmt.Println(err.Error())
 		return false
 	}
-	_, err = statement.Exec(userID, startCapital, startCapital, startCapital)
+	_, err = statement.Exec(userID, 0.0, startCapital, startCapital)
 	if err != nil {
 		return false
 	}

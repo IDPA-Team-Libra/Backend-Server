@@ -1,6 +1,7 @@
 package user
 
 import (
+	"database/sql"
 	"fmt"
 
 	"github.com/Liberatys/libra-back/main/stock"
@@ -37,15 +38,14 @@ func (item *PortfolioItem) Write(user User) bool {
 	return true
 }
 
-func LoadUserItems(user User) []PortfolioItem {
-	statement, err := user.DatabaseConnection.Prepare("SELECT buy_price,quantity,total_buy_price,stock_id FROM portfolio_item p_i, portfolio_to_item p_i_t, Portfolio port WHERE p_i_t.portfolio_item_id = p_i.id AND p_i_t.portfolio_id = port.id AND port.user_id = ?")
+func LoadUserItems(user User, Symbol string) []PortfolioItem {
+	statement, err := user.DatabaseConnection.Prepare("SELECT p_i.id, buy_price,quantity,total_buy_price,stock_id FROM portfolio_item p_i, portfolio_to_item p_i_t, Portfolio port WHERE p_i_t.portfolio_item_id = p_i.id AND p_i_t.portfolio_id = port.id AND port.user_id = ?")
 	defer statement.Close()
 	var items []PortfolioItem
 	if err != nil {
 		fmt.Println(err.Error())
 		return items
 	}
-	fmt.Println(user.ID)
 	result, err := statement.Query(user.ID)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -54,15 +54,58 @@ func LoadUserItems(user User) []PortfolioItem {
 	defer result.Close()
 	for result.Next() {
 		var item PortfolioItem
-		result.Scan(&item.BuyPrice, &item.Quantity, &item.TotalBuyPrice, &item.StockID)
+		result.Scan(&item.ID, &item.BuyPrice, &item.Quantity, &item.TotalBuyPrice, &item.StockID)
 		stockInstance := stock.Stock{}
 		symbol := stockInstance.GetSymbolByID(item.StockID)
 		stockInstance = stock.NewStockEntry(symbol, "5")
 		stockInstance.Load()
+		if Symbol != "*" {
+			if Symbol != stockInstance.Symbol {
+				continue
+			}
+		}
 		item.CurrentPrice = stockInstance.Price
 		item.CompanyName = stockInstance.Company
 		item.StockName = stockInstance.Symbol
 		items = append(items, item)
 	}
 	return items
+}
+
+func (item *PortfolioItem) Update(user User) bool {
+	statement, err := user.DatabaseConnection.Prepare("UPDATE portfolio_item SET quantity = ? WHERE id = ?")
+	defer statement.Close()
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	_, err = statement.Exec(item.Quantity, item.ID)
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	return true
+}
+
+func (item *PortfolioItem) Remove(user User) bool {
+	connection := user.DatabaseConnection
+	if executeRemove(connection, "DELETE FROM portfolio_to_item WHERE portfolio_item_id = ?", item.ID) {
+		return executeRemove(connection, "DELETE FROM portfolio_item WHERE id = ?", item.ID)
+	}
+	return false
+}
+
+func executeRemove(conntection *sql.DB, query string, parameters ...interface{}) bool {
+	statement, err := conntection.Prepare(query)
+	defer statement.Close()
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	_, err = statement.Exec(parameters...)
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	return true
 }

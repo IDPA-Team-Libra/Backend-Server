@@ -14,6 +14,7 @@ type Transaction struct {
 	Amount             int64  `json:"amount"`
 	Value              string `json:"value"`
 	Date               string `json:"date"`
+	Processed          bool   `json:"processed"`
 	DatabaseConnection *sql.DB
 }
 
@@ -31,7 +32,7 @@ func NewTransaction(UserID int64, Action string, Description string, Amount int6
 
 func (transaction *Transaction) LoadTransactions(userID int64) []Transaction {
 	var transactions []Transaction
-	statement, err := transaction.DatabaseConnection.Prepare("SELECT action,description,amount,value,date FROM transaction WHERE userID = ?")
+	statement, err := transaction.DatabaseConnection.Prepare("SELECT action,description,amount,value,date,processed FROM transaction WHERE userID = ?")
 	defer statement.Close()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -45,7 +46,7 @@ func (transaction *Transaction) LoadTransactions(userID int64) []Transaction {
 	defer result.Close()
 	for result.Next() {
 		var trans Transaction
-		result.Scan(&trans.Action, &trans.Description, &trans.Amount, &trans.Value, &trans.Date)
+		result.Scan(&trans.Action, &trans.Description, &trans.Amount, &trans.Value, &trans.Date, &trans.Processed)
 		transactions = append(transactions, trans)
 	}
 	return transactions
@@ -65,9 +66,8 @@ func (transaction *Transaction) Write(processed bool) bool {
 	if processed == false {
 		_, err = statement.Exec(transaction.UserID, transaction.Action, transaction.Description, transaction.Amount, transaction.Value, processed, transaction.Date)
 	} else {
-		_, err = statement.Exec(transaction.UserID, transaction.Action, transaction.Description, transaction.Amount, processed, transaction.Value)
+		_, err = statement.Exec(transaction.UserID, transaction.Action, transaction.Description, transaction.Amount, transaction.Value, processed)
 	}
-
 	if err != nil {
 		fmt.Println(err.Error())
 		fmt.Println("Transaction | Write | failed")
