@@ -65,8 +65,7 @@ func GetUserTransaction(w http.ResponseWriter, r *http.Request) {
 		w.Write(resp)
 		return
 	}
-	currentUser.SetDatabaseConnection(database)
-	userID := currentUser.GetUserIdByUsername(request.Username)
+	userID := user.GetUserIdByUsername(request.Username, GetDatabaseInstance())
 	trans := transaction.Transaction{}
 	trans.DatabaseConnection = database
 	transactions := trans.LoadTransactions(userID)
@@ -109,10 +108,9 @@ func RemoveTransaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user_instance := user.CreateUserInstance(currentUser.Username, currentUser.Password, "")
-	user_instance.SetDatabaseConnection(database)
-	user_instance.ID = user_instance.GetUserIdByUsername(request.Username)
+	user_instance.ID = user.GetUserIdByUsername(request.Username, GetDatabaseInstance())
 	requestedStock := loadStockInstance(request.StockSymbol)
-	items := user.LoadUserItems(user_instance, request.StockSymbol)
+	items := user.LoadUserItems(user_instance.ID, request.StockSymbol, GetDatabaseInstance())
 	totalStockQuantity := calculateTotalStocks(items)
 	requestCount := request.Amount
 	if totalStockQuantity < requestCount {
@@ -132,11 +130,11 @@ func RemoveTransaction(w http.ResponseWriter, r *http.Request) {
 			if quantity <= requestCount {
 				requestCount -= quantity
 				items[index].Quantity = 0
-				items[index].Remove(user_instance)
+				items[index].Remove(GetDatabaseInstance())
 			} else {
 				items[index].Quantity -= requestCount
 				requestCount = 0
-				items[index].Update(user_instance)
+				items[index].Update(GetDatabaseInstance())
 				break
 			}
 		} else {
@@ -146,13 +144,13 @@ func RemoveTransaction(w http.ResponseWriter, r *http.Request) {
 	transaction := transaction.NewTransaction(user_instance.ID, request.Operation, request.Operation+" "+request.StockSymbol, request.Amount, requestedStock.Price, request.Date)
 	transaction.DatabaseConnection = database
 	transaction.Write(true)
-	portfolio := user.LoadPortfolio(user_instance)
+	portfolio := user.LoadPortfolio(request.Username, GetDatabaseInstance())
 	portfolio.TotalStocks -= request.Amount
 	s := fmt.Sprintf("%f", float64(request.Amount))
 	additionalBalance := multiplyString(s, requestedStock.Price)
 	portfolio.Balance = *portfolio.Balance.Add(&portfolio.Balance, additionalBalance)
 	portfolio.CurrentValue = *portfolio.CurrentValue.Sub(&portfolio.CurrentValue, additionalBalance)
-	portfolio.Update(user_instance)
+	portfolio.Update(GetDatabaseInstance())
 	response := TransactionResponse{
 		Message:   "Verkauf wurde getätigt",
 		State:     "Success",
@@ -197,8 +195,7 @@ func AddTransaction(w http.ResponseWriter, r *http.Request) {
 	currentUser := user.User{
 		Username: request.Username,
 	}
-	currentUser.SetDatabaseConnection(database)
-	userID := currentUser.GetUserIdByUsername(request.Username)
+	userID := user.GetUserIdByUsername(request.Username, GetDatabaseInstance())
 	currentUser.ID = userID
 	if userID <= 0 {
 		fmt.Println("Invalud userID")
@@ -216,7 +213,7 @@ func AddTransaction(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(obj))
 		return
 	}
-	portfolio := user.LoadPortfolio(currentUser)
+	portfolio := user.LoadPortfolio(request.Username, GetDatabaseInstance())
 	totalPrice := new(big.Float)
 	requestedStock := loadStockInstance(request.StockSymbol)
 	totalPrice, _ = totalPrice.SetString(requestedStock.Price)
@@ -270,7 +267,7 @@ func createPortfolioItem(portfolio user.Portfolio, stockInstance stock.Stock, cu
 		Quantity:      quantity,
 		TotalBuyPrice: totalBuyPrice.String(),
 	}
-	portfolioItem.Write(currentUser)
+	portfolioItem.Write(GetDatabaseInstance())
 	updatePortfolio(portfolio, totalBuyPrice, quantity, currentUser)
 	connectPortfolioItemWithPortfolio(portfolio, portfolioItem, currentUser)
 }
@@ -280,7 +277,7 @@ func connectPortfolioItemWithPortfolio(portfolio user.Portfolio, item user.Portf
 		PortfolioID:     portfolio.ID,
 		PortfolioItemID: item.ID,
 	}
-	return portfolioConnection.Write(currentUser)
+	return portfolioConnection.Write(GetDatabaseInstance())
 }
 
 func AddDelayedTransaction(w http.ResponseWriter, r *http.Request) {
@@ -299,8 +296,7 @@ func AddDelayedTransaction(w http.ResponseWriter, r *http.Request) {
 	currentUser := user.User{
 		Username: request.Username,
 	}
-	currentUser.SetDatabaseConnection(database)
-	userID := currentUser.GetUserIdByUsername(request.Username)
+	userID := user.GetUserIdByUsername(request.Username, GetDatabaseInstance())
 	currentUser.ID = userID
 	if userID <= 0 {
 		logger.LogMessage(fmt.Sprintf("Eine Nutzer ID war nicht gültig | User %s", request.Username), logger.WARNING)
@@ -318,7 +314,7 @@ func AddDelayedTransaction(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(obj))
 		return
 	}
-	portfolio := user.LoadPortfolio(currentUser)
+	portfolio := user.LoadPortfolio(request.Username, GetDatabaseInstance())
 	totalPrice := new(big.Float)
 	requestedStock := loadStockInstance(request.StockSymbol)
 	totalPrice, _ = totalPrice.SetString(requestedStock.Price)
@@ -358,5 +354,5 @@ func updatePortfolio(portfolio user.Portfolio, totalPrice big.Float, quantity in
 	portfolio.Balance = *newBalanceValue
 	portfolio.CurrentValue = *newCurrentValue
 	portfolio.TotalStocks += quantity
-	portfolio.Update(currentUser)
+	portfolio.Update(GetDatabaseInstance())
 }

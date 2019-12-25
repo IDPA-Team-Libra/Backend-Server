@@ -9,13 +9,12 @@ import (
 
 //TODO cleanup code
 type User struct {
-	ID                 int64  `json:"id"`
-	Username           string `json:"username"`
-	Password           string `json:"email"`
-	Email              string `json:"password"`
-	RegistrationDate   string `json:"registrationDate"`
-	DatabaseConnection *sql.DB
-	Portfolio          Portfolio `json:"portfolio"`
+	ID               int64     `json:"id"`
+	Username         string    `json:"username"`
+	Password         string    `json:"email"`
+	Email            string    `json:"password"`
+	RegistrationDate string    `json:"registrationDate"`
+	Portfolio        Portfolio `json:"portfolio"`
 }
 
 type AccessToken struct {
@@ -41,15 +40,11 @@ func CreateUserInstance(username string, password string, email string) User {
 	}
 }
 
-func (user *User) SetDatabaseConnection(db *sql.DB) {
-	user.DatabaseConnection = db
-}
-
-func (user *User) CreationSetup() (bool, string) {
+func (user *User) CreationSetup(connection *sql.DB) (bool, string) {
 	if user.Username == "" || user.Password == "" || user.Email == "" {
 		return false, "Ungültige Nutzerdaten"
 	}
-	uniqueUsername := user.IsUniqueUsername()
+	uniqueUsername := user.IsUniqueUsername(connection)
 	if uniqueUsername == false {
 		return false, "Username is not unique"
 	}
@@ -58,11 +53,11 @@ func (user *User) CreationSetup() (bool, string) {
 	return true, "Usersetup complete"
 }
 
-func (user *User) Authenticate() (bool, string) {
+func (user *User) Authenticate(connection *sql.DB) (bool, string) {
 	if user.Username == "" || user.Password == "" {
 		return false, "Ungültige Nutzerdaten"
 	}
-	success, password_hash := user.GetPasswordHashByUsername()
+	success, password_hash := user.GetPasswordHashByUsername(connection)
 	if success == false {
 		return false, password_hash
 	}
@@ -74,8 +69,8 @@ func (user *User) Authenticate() (bool, string) {
 	return false, "Ungültiges Passwort"
 }
 
-func (user *User) IsUniqueUsername() bool {
-	statement, err := user.DatabaseConnection.Prepare("SELECT count(*) FROM User WHERE username = ?")
+func (user *User) IsUniqueUsername(connection *sql.DB) bool {
+	statement, err := connection.Prepare("SELECT count(*) FROM User WHERE username = ?")
 	defer statement.Close()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -97,8 +92,8 @@ func (user *User) IsUniqueUsername() bool {
 	return true
 }
 
-func (user *User) GetUserIdByUsername(username string) int64 {
-	statement, err := user.DatabaseConnection.Prepare("SELECT id FROM User WHERE username = ?")
+func GetUserIdByUsername(username string, connection *sql.DB) int64 {
+	statement, err := connection.Prepare("SELECT id FROM User WHERE username = ?")
 	defer statement.Close()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -114,8 +109,8 @@ func (user *User) GetUserIdByUsername(username string) int64 {
 	return id
 }
 
-func (user *User) GetPasswordHashByUsername() (bool, string) {
-	statement, err := user.DatabaseConnection.Prepare("SELECT password FROM User WHERE username=?")
+func (user *User) GetPasswordHashByUsername(connection *sql.DB) (bool, string) {
+	statement, err := connection.Prepare("SELECT password FROM User WHERE username=?")
 	if err != nil {
 		fmt.Println(err.Error())
 		return false, "Database connection lost"
@@ -135,8 +130,8 @@ func (user *User) GetPasswordHashByUsername() (bool, string) {
 	return true, passwordHash
 }
 
-func (user *User) Write() bool {
-	statement, err := user.DatabaseConnection.Prepare("INSERT INTO User(username,password,email,creationdate) VALUES(?,?,?,NOW())")
+func (user *User) Write(connection *sql.DB) bool {
+	statement, err := connection.Prepare("INSERT INTO User(username,password,email,creationdate) VALUES(?,?,?,NOW())")
 	defer statement.Close()
 	if err != nil {
 		fmt.Println(err.Error())

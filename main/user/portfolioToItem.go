@@ -1,6 +1,9 @@
 package user
 
-import "fmt"
+import (
+	"database/sql"
+	"fmt"
+)
 
 type PortfolioToItem struct {
 	PortfolioID     int64
@@ -8,8 +11,8 @@ type PortfolioToItem struct {
 }
 
 //TODO clean up code
-func (portConnection *PortfolioToItem) Write(user User) bool {
-	statement, err := user.DatabaseConnection.Prepare("INSERT INTO portfolio_to_item(portfolio_id,portfolio_item_id) VALUES(?,?)")
+func (portConnection *PortfolioToItem) Write(connection *sql.DB) bool {
+	statement, err := connection.Prepare("INSERT INTO portfolio_to_item(portfolio_id,portfolio_item_id) VALUES(?,?)")
 	if err != nil {
 		fmt.Println(err.Error())
 		return false

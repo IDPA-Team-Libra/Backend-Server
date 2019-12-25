@@ -27,6 +27,10 @@ func SetupLogger() {
 	logger.SetupLogger(log_file_path, 4, 5)
 }
 
+func GetDatabaseInstance() *sql.DB {
+	return database
+}
+
 func MailMessage() string {
 	return "Wir heissen Sie herzlich bei Libra wilkommen. Libra ist eine Simulierung des wirklichen Aktienmarkets und soll Ihnen helfen Aktien zu kaufen und verkaufen"
 }
@@ -45,12 +49,11 @@ func main() {
 	mailer = mail.NewMail("mountainviewcasino@gmail.com", "1234", "Wir heissen Sie herzlich bei Libra wilkommen", "Welcome to libra")
 	if EX_MODE == "DEV" {
 		user_instance := user.CreateUserInstance("Haspi", "1234", " ")
-		user_instance.SetDatabaseConnection(database)
-		user_instance.CreationSetup()
-		user_instance.Write()
-		user_id := user_instance.GetUserIdByUsername(user_instance.Username)
+		user_instance.CreationSetup(GetDatabaseInstance())
+		user_instance.Write(GetDatabaseInstance())
+		user_id := user.GetUserIdByUsername(user_instance.Username, GetDatabaseInstance())
 		portfolio := user.Portfolio{}
-		portfolio.Write(user_id, user_instance, START_CAPITAL)
+		portfolio.Write(user_id, GetDatabaseInstance(), START_CAPITAL)
 	}
 	/*
 		SPACE FOR ROUTES
