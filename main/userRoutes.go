@@ -205,3 +205,53 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
+
+type PasswordChangeRequest struct {
+	Username    string `json:"username"`
+	AuthToken   string `json:"authToken"`
+	NewPassword string `json:"newPassword"`
+}
+
+func ChangePassword(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.Write([]byte("Keine Parameter übergeben"))
+		return
+	}
+	var request PasswordChangeRequest
+	err = json.Unmarshal(body, &request)
+	if err != nil {
+		logger.LogMessage(err.Error(), logger.WARNING)
+		w.Write([]byte("Invalid request format"))
+		return
+	}
+	currentUser := user.User{
+		Username: request.Username,
+		Password: request.NewPassword,
+	}
+	validator := sec.NewValidator(request.AuthToken, request.Username)
+	if validator.IsValidToken(jwtKey) == false {
+		obj, _ := json.Marshal("Not able to authenticate user")
+		w.Write([]byte(obj))
+		return
+	}
+	success := changePassword(currentUser.Username, currentUser.Password)
+	if success == false {
+		obj, _ := json.Marshal("Passwort konnte nicht geändert werden")
+		w.Write([]byte(obj))
+	} else {
+		obj, _ := json.Marshal("Das Passwort wurde geändert")
+		w.Write([]byte(obj))
+	}
+	return
+}
+
+func changePassword(username string, newPassword string) bool {
+	user_instance := user.CreateUserInstance(username, "", "")
+	user_instance.SetDatabaseConnection(database)
+	password_validator := user.NewPasswordValidator(newPassword)
+	pw_hash := password_validator.HashPassword()
+	userID := user_instance.GetUserIdByUsername(username)
+	success := user.OverwritePasswordForUserId(userID, pw_hash, database)
+	return success
+}

@@ -41,6 +41,7 @@ func main() {
 	service.SetDatabaseInformation("localhost", "3306", "mysql", "root", "Siera_001_DB", "libra")
 	database = service.GetDatabaseConnection()
 	setDatabaseReferences(database)
+	defer database.Close()
 	mailer = mail.NewMail("mountainviewcasino@gmail.com", "1234", "Wir heissen Sie herzlich bei Libra wilkommen", "Welcome to libra")
 	if EX_MODE == "DEV" {
 		user_instance := user.CreateUserInstance("Haspi", "1234", " ")
@@ -56,6 +57,7 @@ func main() {
 	*/
 	service.AddHTTPRoute("/user/login", Login)
 	service.AddHTTPRoute("/user/register", Register)
+	service.AddHTTPRoute("/user/changePassword", ChangePassword)
 	service.AddHTTPRoute("/stock/all", GetStocks)
 	service.AddHTTPRoute("/transaction/buy", AddTransaction)
 	service.AddHTTPRoute("/transaction/sell", RemoveTransaction)

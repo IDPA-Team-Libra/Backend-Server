@@ -27,3 +27,9 @@ I: 2019/12/25 13:51:55.208781 logger_manger.go:27: Server has started on 3440
 I: 2019/12/25 13:52:47.227184 logger_manger.go:27: Server has started on 3440
 I: 2019/12/25 13:55:38.253117 logger_manger.go:27: Server has started on 3440
 I: 2019/12/25 14:04:04.442058 logger_manger.go:27: Server has started on 3440
+I: 2019/12/25 15:10:26.823360 logger_manger.go:27: Server has started on 3440
+I: 2019/12/25 15:10:34.647851 logger_manger.go:27: Server has started on 3440
+I: 2019/12/25 15:10:45.172985 logger_manger.go:27: Server has started on 3440
+W: 2019/12/25 15:28:34.323238 logger_manger.go:29: Ungültiges Passwort
+W: 2019/12/25 15:29:36.531037 logger_manger.go:29: Ungültiges Passwort
+W: 2019/12/25 15:29:42.674400 logger_manger.go:29: Nutzer hat sich eingelogt | User N.Flueckiger@stud.bbbaden.ch2

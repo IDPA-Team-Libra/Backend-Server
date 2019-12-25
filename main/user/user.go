@@ -150,8 +150,18 @@ func (user *User) Write() bool {
 	return true
 }
 
-func (user *User) Query() {
-
+func OverwritePasswordForUserId(userID int64, newPassword string, db_conn *sql.DB) bool {
+	statement, err := db_conn.Prepare("UPDATE user SET password = ? where id = ?")
+	defer statement.Close()
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	_, err = statement.Exec(newPassword, userID)
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 func (user *User) Remove() bool {
