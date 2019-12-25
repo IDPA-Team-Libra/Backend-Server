@@ -42,9 +42,6 @@ func main() {
 	database = service.GetDatabaseConnection()
 	setDatabaseReferences(database)
 	mailer = mail.NewMail("mountainviewcasino@gmail.com", "1234", "Wir heissen Sie herzlich bei Libra wilkommen", "Welcome to libra")
-	/*
-		SPACE FOR ROUTES
-	*/
 	if EX_MODE == "DEV" {
 		user_instance := user.CreateUserInstance("Haspi", "1234", " ")
 		user_instance.SetDatabaseConnection(database)
@@ -54,6 +51,9 @@ func main() {
 		portfolio := user.Portfolio{}
 		portfolio.Write(user_id, user_instance, START_CAPITAL)
 	}
+	/*
+		SPACE FOR ROUTES
+	*/
 	service.AddHTTPRoute("/user/login", Login)
 	service.AddHTTPRoute("/user/register", Register)
 	service.AddHTTPRoute("/stock/all", GetStocks)

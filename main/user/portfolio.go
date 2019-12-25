@@ -3,6 +3,8 @@ package user
 import (
 	"fmt"
 	"math/big"
+
+	"github.com/Liberatys/libra-back/main/logger"
 )
 
 type Portfolio struct {
@@ -23,20 +25,24 @@ type StubReader struct {
 
 func LoadPortfolio(user User) Portfolio {
 	statement, err := user.DatabaseConnection.Prepare("SELECT id,current_value, total_stocks, start_capital,balance FROM Portfolio WHERE user_id = ?")
-	defer statement.Close()
 	if err != nil {
-		fmt.Println(err.Error())
+		logger.LogMessage(err.Error(), logger.WARNING)
+		statement.Close()
 	}
+	defer statement.Close()
 	result, err := statement.Query(user.GetUserIdByUsername(user.Username))
 	if err != nil {
-		fmt.Println(err.Error())
+		logger.LogMessage(err.Error(), logger.WARNING)
+		result.Close()
+		return Portfolio{}
 	}
 	defer result.Close()
-	result.Next()
 	var reader StubReader
-	err = result.Scan(&reader.ID, &reader.CurrentValue, &reader.TotalStocks, &reader.StartCapital, &reader.Balance)
-	if err != nil {
-		fmt.Println(err.Error())
+	for result.Next() {
+		err = result.Scan(&reader.ID, &reader.CurrentValue, &reader.TotalStocks, &reader.StartCapital, &reader.Balance)
+		if err != nil {
+			logger.LogMessage(err.Error(), logger.WARNING)
+		}
 	}
 	return ConvertStub(reader)
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	"github.com/Liberatys/libra-back/main/logger"
 	"github.com/Liberatys/libra-back/main/mail"
@@ -58,6 +59,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	} else {
 		response.Message = message
 		resp, _ := json.Marshal(response)
+		logger.LogMessage(message, logger.WARNING)
 		w.Write(resp)
 		return
 	}
@@ -72,7 +74,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	response.UserData = string(user_data)
 	resp, err := json.Marshal(response)
 	if err != nil {
-		fmt.Println(err.Error())
+		logger.LogMessage(message, logger.WARNING)
 	}
 	w.Write(resp)
 }
@@ -104,26 +106,40 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	if uniqueUsername == true {
 		success, error_message := user_instance.CreationSetup()
 		if success == false {
-			fmt.Println(error_message)
+			logger.LogMessage(error_message, logger.WARNING)
+			w.Write([]byte(error_message))
 			return
 		}
 		if user_instance.Write() == false {
 			logger.LogMessage(fmt.Sprintf("Ungültige Daten in der Nutzer erstellung | Daten %s|%s", currentUser.Username, currentUser.Email), logger.WARNING)
 			w.Write([]byte("Benutzer konnte nicht erstellt werden. Bitte an Kundendienst wenden"))
+			return
 		} else {
 			response := sec.Response{}
-			portfolio_inst := user.LoadPortfolio(user_instance)
+			if success == true {
+				response = GenerateTokenForUser(currentUser.Username)
+			}
+			response.Message = "Success"
+			user_id := user_instance.GetUserIdByUsername(user_instance.Username)
+			portfolio := user.Portfolio{}
+			var accountStartBalance float64
+			// if no value is set for the start balance, just take 100000 as a fall backnumber
+			if currentUser.StartBalance == "" {
+				accountStartBalance = START_CAPITAL
+			} else {
+				accountStartBalance, _ = strconv.ParseFloat(currentUser.StartBalance, 64)
+			}
+			portfolio.Write(user_id, user_instance, accountStartBalance)
+			currentUser.Password = ""
 			currentUser.Portfolio = SerializedPortfolio{
-				CurrentValue: portfolio_inst.CurrentValue.String(),
-				StartCapital: portfolio_inst.StartCapital.String(),
+				CurrentValue: portfolio.CurrentValue.String(),
+				StartCapital: portfolio.StartCapital.String(),
 			}
 			user_data, _ := json.Marshal(currentUser)
 			response.UserData = string(user_data)
 			resp, err := json.Marshal(response)
-			// activite if password is set and production is reached
-			//go mailer.SendEmail(currentUser.Email)
 			if err != nil {
-				fmt.Println(err.Error())
+				logger.LogMessage(fmt.Sprintf("Invalid Authentication | User %s", currentUser.Username), logger.WARNING)
 			}
 			w.Write(resp)
 		}
@@ -150,12 +166,12 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	if validator.IsValidToken(jwtKey) == false {
 		response.Message = "Invalid Token"
 		if err != nil {
-			fmt.Println(err.Error())
+			logger.LogMessage(fmt.Sprintf("Invalid Authentication | User %s", currentUser.Username), logger.WARNING)
 		}
 	} else {
 		response.Message = "Valid Token"
 		if err != nil {
-			fmt.Println(err.Error())
+			logger.LogMessage(fmt.Sprintf("Invalid Authentication | User %s", currentUser.Username), logger.WARNING)
 		}
 	}
 	resp, err := json.Marshal(response)
@@ -180,12 +196,12 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 		response.Message = "Invalid Token"
 		logger.LogMessage(fmt.Sprintf("Invalid Authentication | User %s", currentUser.Username), logger.WARNING)
 		if err != nil {
-			fmt.Println(err.Error())
+			logger.LogMessage(err.Error(), logger.WARNING)
 		}
 	} else {
 		response.Message = "Valid Token"
 		if err != nil {
-			fmt.Println(err.Error())
+			logger.LogMessage(err.Error(), logger.WARNING)
 		}
 	}
 }

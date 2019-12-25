@@ -3,6 +3,8 @@ package user
 import (
 	"database/sql"
 	"fmt"
+
+	"github.com/Liberatys/libra-back/main/logger"
 )
 
 //TODO cleanup code
@@ -66,7 +68,6 @@ func (user *User) Authenticate() (bool, string) {
 	}
 	password_auth := NewPasswordValidator(user.Password)
 	isValidPassword := password_auth.comparePasswords(password_hash)
-
 	if isValidPassword == true {
 		return true, "Success"
 	}
@@ -78,11 +79,13 @@ func (user *User) IsUniqueUsername() bool {
 	defer statement.Close()
 	if err != nil {
 		fmt.Println(err.Error())
+		logger.LogMessage(err.Error(), logger.ERROR)
 		return false
 	}
 	result, err := statement.Query(user.Username)
 	if err != nil {
 		fmt.Println(err.Error())
+		logger.LogMessage(err.Error(), logger.ERROR)
 	}
 	defer result.Close()
 	var returnedCounter int
