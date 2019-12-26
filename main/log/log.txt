@@ -1,0 +1,19 @@
+W: 2019/12/23 22:37:47.718195 logger_manger.go:27: THIS IS A WARNING
+I: 2019/12/23 23:07:40.980910 logger_manger.go:28: Server has started on 3440
+I: 2019/12/26 13:43:03.714946 logger_manger.go:28: Server has started on 3440
+I: 2019/12/26 14:16:03.638681 logger_manger.go:28: Server has started on 3440
+W: 2019/12/26 14:16:24.279082 logger_manger.go:30: Nutzer hat sich eingeloggt | User hehe
+I: 2019/12/26 14:58:56.096141 logger_manger.go:28: Server has started on 3440
+W: 2019/12/26 15:00:46.022058 logger_manger.go:30: Nutzer hat sich eingeloggt | User hehe
+W: 2019/12/26 15:10:30.093402 logger_manger.go:30: Nutzer hat sich eingeloggt | User hehe
+W: 2019/12/26 15:15:48.598286 logger_manger.go:30: Nutzer hat sich eingeloggt | User hehe
+W: 2019/12/26 15:16:24.584618 logger_manger.go:30: Nutzer hat sich eingeloggt | User hehe
+W: 2019/12/26 15:29:58.989068 logger_manger.go:30: Nutzer hat sich eingeloggt | User hehe
+W: 2019/12/26 15:43:24.531179 logger_manger.go:30: Nutzer hat sich eingeloggt | User hehe
+W: 2019/12/26 15:52:41.136252 logger_manger.go:30: Nutzer hat sich eingeloggt | User hehe
+W: 2019/12/26 16:15:08.077713 logger_manger.go:30: Nutzer hat sich eingeloggt | User hehe
+W: 2019/12/26 16:16:48.567083 logger_manger.go:30: Nutzer hat sich eingeloggt | User hehe
+W: 2019/12/26 16:17:15.009689 logger_manger.go:30: Nutzer hat sich eingeloggt | User hehe
+I: 2019/12/26 16:19:26.620815 logger_manger.go:28: Server has started on 3440
+W: 2019/12/26 16:20:00.740390 logger_manger.go:30: Nutzer hat sich eingeloggt | User hehe
+W: 2019/12/26 16:20:27.996452 logger_manger.go:30: Nutzer hat sich eingeloggt | User hehe

@@ -1,0 +1,2 @@
+I: 2019/12/26 17:10:00.929558 logger_manger.go:27: Server has started on 3440
+W: 2019/12/26 17:10:12.417442 logger_manger.go:29: Nutzer hat sich eingeloggt | User N.Flueckiger@stud.bbbaden.ch3

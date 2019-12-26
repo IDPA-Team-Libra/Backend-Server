@@ -26,13 +26,13 @@ type User struct {
 }
 
 type SerializedPortfolio struct {
-	CurrentValue   string `json:"currentValue"`
-	Stocks         string `json:"stocks"`
 	CurrentBalance string `json:"currentBalance"`
+	CurrentValue   string `json:"currentValue"`
+	TotalStocks    string `json:"totalStocks"`
 	StartCapital   string `json:"startCapital"`
 }
 
-type Auther struct {
+type Author struct {
 	Token    string `json:"token"`
 	Username string `json:"username"`
 }
@@ -55,7 +55,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	response := sec.Response{}
 	if success == true {
 		response = GenerateTokenForUser(currentUser.Username)
-		logger.LogMessage(fmt.Sprintf("Nutzer hat sich eingelogt | User %s", currentUser.Username), logger.WARNING)
+		logger.LogMessage(fmt.Sprintf("Nutzer hat sich eingeloggt | User %s", currentUser.Username), logger.WARNING)
 	} else {
 		response.Message = message
 		resp, _ := json.Marshal(response)
@@ -69,6 +69,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	currentUser.Portfolio = SerializedPortfolio{
 		CurrentValue:   portfolio_inst.CurrentValue.String(),
 		StartCapital:   portfolio_inst.StartCapital.String(),
+		TotalStocks:    strconv.FormatInt(portfolio_inst.TotalStocks, 10),
 		CurrentBalance: portfolio_inst.Balance.String(),
 	}
 	user_data, _ := json.Marshal(currentUser)
@@ -135,6 +136,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 				CurrentValue:   portfolio.CurrentValue.String(),
 				StartCapital:   portfolio.StartCapital.String(),
 				CurrentBalance: portfolio.Balance.String(),
+				TotalStocks:    strconv.FormatInt(portfolio.TotalStocks, 10),
 			}
 			user_data, _ := json.Marshal(currentUser)
 			response.UserData = string(user_data)

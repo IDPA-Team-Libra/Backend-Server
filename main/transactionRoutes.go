@@ -72,7 +72,7 @@ func GetUserTransaction(w http.ResponseWriter, r *http.Request) {
 	json_obj, err := json.Marshal(transactions)
 	if err != nil {
 		fmt.Println(err.Error())
-		logger.LogMessage(fmt.Sprintf("Das Request format in einer Anfrage an GetUserTransaction wurde nicht eingehalten | User: %s", currentUser.Username), logger.WARNING)
+		logger.LogMessage(fmt.Sprintf("Das Request Format in einer Anfrage an GetUserTransaction wurde nicht eingehalten | User: %s", currentUser.Username), logger.WARNING)
 		w.Write([]byte("Invalid request format"))
 		return
 	}
@@ -154,7 +154,7 @@ func RemoveTransaction(w http.ResponseWriter, r *http.Request) {
 	response := TransactionResponse{
 		Message:   "Verkauf wurde getätigt",
 		State:     "Success",
-		Title:     "Aktien wurden verkauf und ihrem Konto gutgeschrieben",
+		Title:     "Titel wurde verkauft und der Betrag ihrem Konto gutgeschrieben",
 		Operation: "-",
 	}
 	obj, _ := json.Marshal(response)
@@ -339,9 +339,9 @@ func AddDelayedTransaction(w http.ResponseWriter, r *http.Request) {
 	transaction.Write(false)
 	updatePortfolio(portfolio, *totalPrice, request.Amount, currentUser)
 	response := TransactionResponse{
-		Message:   "Kauf wird abgewickelt.. Dies kann je nach Auslastung einige Minuten dauern",
-		State:     "Success",
-		Title:     "Kauf abgeschlossen",
+		Message:   "Kauf wird abgewickelt. Dies kann einige Minuten in Anspruch nehmen..",
+		State:     "Success!",
+		Title:     "Kauf abgeschlossen.",
 		Operation: "-",
 	}
 	obj, _ := json.Marshal(response)
