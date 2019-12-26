@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	"github.com/Liberatys/libra-back/main/logger"
 	"github.com/Liberatys/libra-back/main/mail"
@@ -26,11 +27,11 @@ type User struct {
 
 type SerializedPortfolio struct {
 	CurrentValue string `json:"currentValue"`
-	Stocks       string `json:"stocks"`
+	TotalStocks  string `json:"totalStocks"`
 	StartCapital string `json:"startCapital"`
 }
 
-type Auther struct {
+type Author struct {
 	Token    string `json:"token"`
 	Username string `json:"username"`
 }
@@ -54,7 +55,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	response := sec.Response{}
 	if success == true {
 		response = GenerateTokenForUser(currentUser.Username)
-		logger.LogMessage(fmt.Sprintf("Nutzer hat sich eingelogt | User %s", currentUser.Username), logger.WARNING)
+		logger.LogMessage(fmt.Sprintf("Nutzer hat sich eingeloggt | User %s", currentUser.Username), logger.WARNING)
 	} else {
 		response.Message = message
 		resp, _ := json.Marshal(response)
@@ -66,6 +67,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	portfolio_inst := user.LoadPortfolio(user_instance)
 	currentUser.Portfolio = SerializedPortfolio{
 		CurrentValue: portfolio_inst.CurrentValue.String(),
+		TotalStocks:  strconv.FormatInt(portfolio_inst.TotalStocks, 10),
 		StartCapital: portfolio_inst.StartCapital.String(),
 	}
 	user_data, _ := json.Marshal(currentUser)
@@ -115,6 +117,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			portfolio_inst := user.LoadPortfolio(user_instance)
 			currentUser.Portfolio = SerializedPortfolio{
 				CurrentValue: portfolio_inst.CurrentValue.String(),
+				TotalStocks:  strconv.FormatInt(portfolio_inst.TotalStocks, 10),
 				StartCapital: portfolio_inst.StartCapital.String(),
 			}
 			user_data, _ := json.Marshal(currentUser)
