@@ -1,8 +1,11 @@
 package user
 
 import (
+	"database/sql"
 	"fmt"
 	"math/big"
+
+	"github.com/Liberatys/libra-back/main/logger"
 )
 
 type Portfolio struct {
@@ -21,22 +24,26 @@ type StubReader struct {
 	ID           int64
 }
 
-func LoadPortfolio(user User) Portfolio {
-	statement, err := user.DatabaseConnection.Prepare("SELECT id,current_value, total_stocks, start_capital,balance FROM Portfolio WHERE user_id = ?")
-	defer statement.Close()
+func LoadPortfolio(username string, connection *sql.DB) Portfolio {
+	statement, err := connection.Prepare("SELECT id,current_value, total_stocks, start_capital,balance FROM Portfolio WHERE user_id = ?")
 	if err != nil {
-		fmt.Println(err.Error())
+		logger.LogMessage(err.Error(), logger.WARNING)
+		statement.Close()
 	}
-	result, err := statement.Query(user.GetUserIdByUsername(user.Username))
+	defer statement.Close()
+	result, err := statement.Query(GetUserIdByUsername(username, connection))
 	if err != nil {
-		fmt.Println(err.Error())
+		logger.LogMessage(err.Error(), logger.WARNING)
+		result.Close()
+		return Portfolio{}
 	}
 	defer result.Close()
-	result.Next()
 	var reader StubReader
-	err = result.Scan(&reader.ID, &reader.CurrentValue, &reader.TotalStocks, &reader.StartCapital, &reader.Balance)
-	if err != nil {
-		fmt.Println(err.Error())
+	for result.Next() {
+		err = result.Scan(&reader.ID, &reader.CurrentValue, &reader.TotalStocks, &reader.StartCapital, &reader.Balance)
+		if err != nil {
+			logger.LogMessage(err.Error(), logger.WARNING)
+		}
 	}
 	return ConvertStub(reader)
 }
@@ -57,12 +64,12 @@ func convertStringToFloat(value string) big.Float {
 	return *currentVal
 }
 
-func (portfolio *Portfolio) Write(userID int64, user User, startCapital float64) bool {
+func (portfolio *Portfolio) Write(userID int64, connection *sql.DB, startCapital float64) bool {
 	portfolio.ID = userID
 	portfolio.CurrentValue = *big.NewFloat(0.0)
 	portfolio.TotalStocks = 0
 	portfolio.StartCapital = *big.NewFloat(startCapital)
-	statement, err := user.DatabaseConnection.Prepare("INSERT INTO Portfolio(user_id, current_value,total_stocks,start_capital,balance) VALUES(?,?,0,?,?)")
+	statement, err := connection.Prepare("INSERT INTO Portfolio(user_id, current_value,total_stocks,start_capital,balance) VALUES(?,?,0,?,?)")
 	defer statement.Close()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -75,8 +82,8 @@ func (portfolio *Portfolio) Write(userID int64, user User, startCapital float64)
 	return true
 }
 
-func (portfolio *Portfolio) Update(user User) bool {
-	statement, err := user.DatabaseConnection.Prepare("UPDATE Portfolio SET balance = ?, current_value = ?, total_stocks = ? WHERE id = ?")
+func (portfolio *Portfolio) Update(connection *sql.DB) bool {
+	statement, err := connection.Prepare("UPDATE Portfolio SET balance = ?, current_value = ?, total_stocks = ? WHERE id = ?")
 	defer statement.Close()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -90,8 +97,8 @@ func (portfolio *Portfolio) Update(user User) bool {
 	return true
 }
 
-func (portfolio *Portfolio) AddItem(portfolioItem PortfolioItem, user User) bool {
-	statement, err := user.DatabaseConnection.Prepare("INSERT INTO portfolio_to_item(portfolio_id,portfolio_item_id) VALUES(?,?)")
+func (portfolio *Portfolio) AddItem(portfolioItem PortfolioItem, connection *sql.DB) bool {
+	statement, err := connection.Prepare("INSERT INTO portfolio_to_item(portfolio_id,portfolio_item_id) VALUES(?,?)")
 	defer statement.Close()
 	if err != nil {
 		fmt.Println(err.Error())

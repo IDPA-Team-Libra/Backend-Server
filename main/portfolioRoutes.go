@@ -31,14 +31,13 @@ func GetPortfolio(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user_instance := user.CreateUserInstance(currentUser.Username, currentUser.Password, "")
-	user_instance.SetDatabaseConnection(database)
-	user_instance.ID = user_instance.GetUserIdByUsername(user_instance.Username)
+	user_instance.ID = user.GetUserIdByUsername(user_instance.Username, GetDatabaseInstance())
 	trans := transaction.Transaction{}
 	trans.DatabaseConnection = database
 	transactions := trans.LoadTransactions(user_instance.ID)
 	response := PortfolioContent{}
 	response.Message = "Success"
-	item_data, _ := json.Marshal(user.LoadUserItems(user_instance, "*"))
+	item_data, _ := json.Marshal(user.LoadUserItems(user_instance.ID, "*", GetDatabaseInstance()))
 	transaction_data, _ := json.Marshal(transactions)
 	response.Items = string(item_data)
 	response.Transactions = string(transaction_data)

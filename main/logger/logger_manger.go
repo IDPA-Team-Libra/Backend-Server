@@ -9,7 +9,6 @@ import (
 func SetupLogger(filePath string, rotationSizeInMB int, numberofBackups int) {
 	mlog.DefaultFlags = log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile
 	mlog.StartEx(mlog.LevelInfo, filePath, rotationSizeInMB*1024*1024, numberofBackups)
-	// mlog.Start(mlog.LevelInfo, "")
 }
 
 func BackupLogFiles() {
