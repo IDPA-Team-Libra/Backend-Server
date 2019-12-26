@@ -2,7 +2,9 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"path/filepath"
+	"time"
 
 	"github.com/Liberatys/Sanctuary/service"
 	_ "github.com/Liberatys/libra-back/main/apiconnection"
@@ -23,7 +25,9 @@ func setupDB() {
 }
 
 func SetupLogger() {
-	log_file_path, _ := filepath.Abs("log/log.txt")
+	now := time.Now()
+	valu := now.Format("2006_01_02_15_04_05")
+	log_file_path, _ := filepath.Abs(fmt.Sprintf("log/%s.txt", valu))
 	logger.SetupLogger(log_file_path, 4, 5)
 }
 

@@ -26,9 +26,10 @@ type User struct {
 }
 
 type SerializedPortfolio struct {
-	CurrentValue string `json:"currentValue"`
-	Stocks       string `json:"stocks"`
-	StartCapital string `json:"startCapital"`
+	CurrentValue   string `json:"currentValue"`
+	Stocks         string `json:"stocks"`
+	CurrentBalance string `json:"currentBalance"`
+	StartCapital   string `json:"startCapital"`
 }
 
 type Auther struct {
@@ -66,8 +67,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	currentUser.Password = ""
 	portfolio_inst := user.LoadPortfolio(currentUser.Username, GetDatabaseInstance())
 	currentUser.Portfolio = SerializedPortfolio{
-		CurrentValue: portfolio_inst.CurrentValue.String(),
-		StartCapital: portfolio_inst.StartCapital.String(),
+		CurrentValue:   portfolio_inst.CurrentValue.String(),
+		StartCapital:   portfolio_inst.StartCapital.String(),
+		CurrentBalance: portfolio_inst.Balance.String(),
 	}
 	user_data, _ := json.Marshal(currentUser)
 	response.UserData = string(user_data)
@@ -130,8 +132,9 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			portfolio.Write(user_id, GetDatabaseInstance(), accountStartBalance)
 			currentUser.Password = ""
 			currentUser.Portfolio = SerializedPortfolio{
-				CurrentValue: portfolio.CurrentValue.String(),
-				StartCapital: portfolio.StartCapital.String(),
+				CurrentValue:   portfolio.CurrentValue.String(),
+				StartCapital:   portfolio.StartCapital.String(),
+				CurrentBalance: portfolio.Balance.String(),
 			}
 			user_data, _ := json.Marshal(currentUser)
 			response.UserData = string(user_data)
@@ -238,6 +241,7 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 		obj, _ := json.Marshal("Passwort konnte nicht geändert werden")
 		w.Write([]byte(obj))
 	} else {
+		logger.LogMessage(fmt.Sprintf("Nutzer hat Passwort geändert | ", currentUser.Username), logger.INFO)
 		obj, _ := json.Marshal("Das Passwort wurde geändert")
 		w.Write([]byte(obj))
 	}
