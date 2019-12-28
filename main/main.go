@@ -46,7 +46,7 @@ func main() {
 	logger.LogMessage("Server has started on 3440", logger.INFO)
 	service.ActivateHTTPServer()
 	//service.SetDatabaseInformation("localhost", "3306", "mysql", "root", "Siera_001_DB", "libra")
-	//service.SetDatabaseInformation("localhost", "3306", "mysql", "root", "pw123", "libra")
+	service.SetDatabaseInformation("localhost", "3306", "mysql", "root", "pw123", "libra")
 	database = service.GetDatabaseConnection()
 	setDatabaseReferences(database)
 	defer database.Close()

@@ -71,3 +71,12 @@ CREATE TABLE portfolio_to_item (
         FOREIGN KEY (portfolio_id) REFERENCES Portfolio (id),
         FOREIGN KEY (portfolio_item_id) REFERENCES portfolio_item (id)
 );
+
+CREATE TABLE performance (
+        id INTEGER,
+        userID INTEGER,
+        date date,
+        performance DECIMAL(10, 2),
+        PRIMARY KEY (id),
+        FOREIGN KEY (userID) REFERENCES User (id)
+);
