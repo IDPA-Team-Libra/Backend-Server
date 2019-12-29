@@ -1,0 +1,27 @@
+[[constraint]]
+  branch = "master"
+  name = "github.com/Liberatys/Sanctuary"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/cmckee-dev/go-alpha-vantage"
+
+[[constraint]]
+  name = "github.com/dgrijalva/jwt-go"
+  version = "3.2.0"
+
+[[constraint]]
+  name = "github.com/go-mail/mail"
+  version="2.3.1"
+
+[[constraint]]
+  name = "github.com/robfig/cron"
+  version = "3.0.0"
+
+[[constraint]]
+  branch = "master"
+  name = "golang.org/x/crypto"
+
+[prune]
+  go-tests = true
+  unused-packages = true

@@ -59,19 +59,14 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	} else {
 		response.Message = message
 		resp, _ := json.Marshal(response)
-		logger.LogMessage(message, logger.WARNING)
+		logger.LogMessage(fmt.Sprintf("%s | User: %s", message, currentUser.Username), logger.WARNING)
 		w.Write(resp)
 		return
 	}
 	response.Message = message
 	currentUser.Password = ""
 	portfolio_inst := user.LoadPortfolio(currentUser.Username, GetDatabaseInstance())
-	currentUser.Portfolio = SerializedPortfolio{
-		CurrentValue:   portfolio_inst.CurrentValue.String(),
-		StartCapital:   portfolio_inst.StartCapital.String(),
-		TotalStocks:    strconv.FormatInt(portfolio_inst.TotalStocks, 10),
-		CurrentBalance: portfolio_inst.Balance.String(),
-	}
+	currentUser.Portfolio = ConvertPortfolioToSerialized(portfolio_inst)
 	user_data, _ := json.Marshal(currentUser)
 	response.UserData = string(user_data)
 	resp, err := json.Marshal(response)
@@ -79,6 +74,16 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		logger.LogMessage(message, logger.WARNING)
 	}
 	w.Write(resp)
+}
+
+func ConvertPortfolioToSerialized(portfolio_inst user.Portfolio) SerializedPortfolio {
+	serializedPortfolio := SerializedPortfolio{
+		CurrentValue:   portfolio_inst.CurrentValue.String(),
+		StartCapital:   portfolio_inst.StartCapital.String(),
+		TotalStocks:    strconv.FormatInt(portfolio_inst.TotalStocks, 10),
+		CurrentBalance: portfolio_inst.Balance.String(),
+	}
+	return serializedPortfolio
 }
 
 const (
@@ -116,10 +121,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("Benutzer konnte nicht erstellt werden. Bitte an Kundendienst wenden"))
 			return
 		} else {
-			response := sec.Response{}
-			if success == true {
-				response = GenerateTokenForUser(currentUser.Username)
-			}
+			response := GenerateTokenForUser(currentUser.Username)
 			response.Message = "Success"
 			user_id := user.GetUserIdByUsername(user_instance.Username, GetDatabaseInstance())
 			portfolio := user.Portfolio{}
@@ -132,12 +134,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			}
 			portfolio.Write(user_id, GetDatabaseInstance(), accountStartBalance)
 			currentUser.Password = ""
-			currentUser.Portfolio = SerializedPortfolio{
-				CurrentValue:   portfolio.CurrentValue.String(),
-				StartCapital:   portfolio.StartCapital.String(),
-				CurrentBalance: portfolio.Balance.String(),
-				TotalStocks:    strconv.FormatInt(portfolio.TotalStocks, 10),
-			}
+			currentUser.Portfolio = ConvertPortfolioToSerialized(portfolio)
 			user_data, _ := json.Marshal(currentUser)
 			response.UserData = string(user_data)
 			resp, err := json.Marshal(response)
@@ -243,7 +240,7 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 		obj, _ := json.Marshal("Passwort konnte nicht geändert werden")
 		w.Write([]byte(obj))
 	} else {
-		logger.LogMessage(fmt.Sprintf("Nutzer hat Passwort geändert | ", currentUser.Username), logger.INFO)
+		logger.LogMessage(fmt.Sprintf("Nutzer hat Passwort geändert | %s", currentUser.Username), logger.INFO)
 		obj, _ := json.Marshal("Das Passwort wurde geändert")
 		w.Write([]byte(obj))
 	}
@@ -254,6 +251,6 @@ func changePassword(username string, newPassword string) bool {
 	password_validator := user.NewPasswordValidator(newPassword)
 	pw_hash := password_validator.HashPassword()
 	userID := user.GetUserIdByUsername(username, GetDatabaseInstance())
-	success := user.OverwritePasswordForUserId(userID, pw_hash, database)
+	success := user.OverwritePasswordForUserId(userID, pw_hash, GetDatabaseInstance())
 	return success
 }

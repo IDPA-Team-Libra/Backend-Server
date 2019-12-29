@@ -23,7 +23,7 @@ func (passwordValidator *PasswordValidatior) isValidPassword() bool {
 }
 
 func (passwordValidator *PasswordValidatior) HashPassword() string {
-	hash, err := bcrypt.GenerateFromPassword([]byte(passwordValidator.Password), 8)
+	hash, err := bcrypt.GenerateFromPassword([]byte(passwordValidator.Password), 11)
 	if err != nil {
 		//TODO: Log information to a specified logger for the package
 		return ""

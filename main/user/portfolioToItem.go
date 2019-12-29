@@ -11,7 +11,7 @@ type PortfolioToItem struct {
 }
 
 //TODO clean up code
-func (portConnection *PortfolioToItem) Write(connection *sql.DB) bool {
+func (portConnection *PortfolioToItem) Write(connection *sql.Tx) bool {
 	statement, err := connection.Prepare("INSERT INTO portfolio_to_item(portfolio_id,portfolio_item_id) VALUES(?,?)")
 	if err != nil {
 		fmt.Println(err.Error())

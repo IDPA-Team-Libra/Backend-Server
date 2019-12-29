@@ -18,7 +18,7 @@ type PortfolioItem struct {
 	CurrentPrice  string
 }
 
-func (item *PortfolioItem) Write(connection *sql.DB) bool {
+func (item *PortfolioItem) Write(connection *sql.Tx) bool {
 	statement, err := connection.Prepare("INSERT INTO portfolio_item(stock_id,buy_price, quantity, total_buy_price,buy_date_time) VALUES(?,?,?,?,NOW())")
 	defer statement.Close()
 	if err != nil {

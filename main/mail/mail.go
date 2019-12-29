@@ -1,8 +1,9 @@
 package mail
 
-import "github.com/go-gomail/gomail"
+import (
+	gmail "github.com/go-mail/mail"
+)
 
-//TODO implement mailer template
 type Mail struct {
 	Sender    string
 	Receaver  string
@@ -30,12 +31,12 @@ func NewMail(Sender string, GmailPass string, Message string, Subject string) Ma
 }
 
 func (mail *Mail) SendEmail(Receaver string) {
-	m := gomail.NewMessage()
+	m := gmail.NewMessage()
 	m.SetHeader("From", mail.Sender)
 	m.SetHeader("To", Receaver)
 	m.SetHeader("Subject", mail.Subject)
 	m.SetBody("text/html", mail.Message)
-	d := gomail.NewDialer("smtp.gmail.com", 587, mail.Sender, mail.GmailPass)
+	d := gmail.NewDialer("smtp.gmail.com", 587, mail.Sender, mail.GmailPass)
 	if err := d.DialAndSend(m); err != nil {
 		panic(err)
 	}

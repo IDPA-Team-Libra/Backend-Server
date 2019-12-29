@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"net/http"
 
+	"github.com/Liberatys/libra-back/main/database"
 	"github.com/Liberatys/libra-back/main/logger"
 	"github.com/Liberatys/libra-back/main/sec"
 	"github.com/Liberatys/libra-back/main/stock"
@@ -31,6 +32,7 @@ type TransactionResponse struct {
 	State     string `json:"state"`
 	Title     string `json:"title"`
 	Operation string `json:"operation"`
+	Value     string `json:"transactionValue"`
 }
 
 type FutureTransactionOption struct {
@@ -65,15 +67,19 @@ func GetUserTransaction(w http.ResponseWriter, r *http.Request) {
 		w.Write(resp)
 		return
 	}
+	//TODO do something
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 	userID := user.GetUserIdByUsername(request.Username, GetDatabaseInstance())
 	trans := transaction.Transaction{}
-	trans.DatabaseConnection = database
-	transactions := trans.LoadTransactions(userID)
+	transactions := trans.LoadTransactions(userID, GetDatabaseInstance())
 	json_obj, err := json.Marshal(transactions)
 	if err != nil {
 		fmt.Println(err.Error())
 		logger.LogMessage(fmt.Sprintf("Das Request Format in einer Anfrage an GetUserTransaction wurde nicht eingehalten | User: %s", currentUser.Username), logger.WARNING)
-		w.Write([]byte("Invalid request format"))
+		obj, _ := json.Marshal("Invalid request format")
+		w.Write(obj)
 		return
 	}
 	w.Write(json_obj)
@@ -82,14 +88,15 @@ func GetUserTransaction(w http.ResponseWriter, r *http.Request) {
 func RemoveTransaction(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		w.Write([]byte("Keine Parameter übergeben"))
+		obj, _ := json.Marshal("Keine Parameter übergeben")
+		w.Write(obj)
 		return
 	}
 	var request TransactionRequest
 	err = json.Unmarshal(body, &request)
 	if err != nil {
-		fmt.Println(err.Error())
-		w.Write([]byte("Invalid request format"))
+		obj, _ := json.Marshal("Invalid request format")
+		w.Write(obj)
 		return
 	}
 	currentUser := user.User{
@@ -97,6 +104,7 @@ func RemoveTransaction(w http.ResponseWriter, r *http.Request) {
 	}
 	validator := sec.NewValidator(request.AuthToken, request.Username)
 	if validator.IsValidToken(jwtKey) == false {
+		logger.LogMessageWithOrigin(fmt.Sprintf("User: %s was not able to be authenticated", currentUser.Username), logger.WARNING, "transactionRoutes.go")
 		response := TransactionResponse{
 			Message:   "Leider konnten Sie nicht durch den Server authentizifiert werden. Bitte neu einloggen",
 			State:     "Breach",
@@ -114,6 +122,7 @@ func RemoveTransaction(w http.ResponseWriter, r *http.Request) {
 	totalStockQuantity := calculateTotalStocks(items)
 	requestCount := request.Amount
 	if totalStockQuantity < requestCount {
+		logger.LogMessageWithOrigin(fmt.Sprintf("User: %s user tried to sell more stock then he could", currentUser.Username), logger.WARNING, "transactionRoutes.go")
 		response := TransactionResponse{
 			Message:   "Sie können nicht mehr Aktien verkaufen als sie haben",
 			State:     "Failed",
@@ -141,21 +150,47 @@ func RemoveTransaction(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
+	handler, err := GetDatabaseInstance().Begin()
+	//TODO do something
+	if err != nil {
+		obj, _ := json.Marshal("Invalid request format")
+		w.Write(obj)
+		return
+	}
 	transaction := transaction.NewTransaction(user_instance.ID, request.Operation, request.Operation+" "+request.StockSymbol, request.Amount, requestedStock.Price, request.Date)
-	transaction.DatabaseConnection = database
-	transaction.Write(true)
+	if transaction.Write(true, handler) == false {
+		handler.Rollback()
+		obj, _ := json.Marshal("Invalid request format")
+		w.Write(obj)
+		return
+	}
 	portfolio := user.LoadPortfolio(request.Username, GetDatabaseInstance())
 	portfolio.TotalStocks -= request.Amount
 	s := fmt.Sprintf("%f", float64(request.Amount))
 	additionalBalance := multiplyString(s, requestedStock.Price)
 	portfolio.Balance = *portfolio.Balance.Add(&portfolio.Balance, additionalBalance)
 	portfolio.CurrentValue = *portfolio.CurrentValue.Sub(&portfolio.CurrentValue, additionalBalance)
-	portfolio.Update(GetDatabaseInstance())
+	if portfolio.Update(handler) == false {
+		handler.Rollback()
+		response := TransactionResponse{
+			Message:   "Verkauf konnte nicht getätigt werden",
+			State:     "Failure",
+			Title:     "Kauf bitte erneut ausführen",
+			Operation: "-",
+			Value:     "0",
+		}
+		obj, _ := json.Marshal(response)
+		w.Write([]byte(obj))
+		return
+	}
+	handler.Commit()
+	logger.LogMessageWithOrigin(fmt.Sprintf("User: %s user sold %s", currentUser.Username, request.StockSymbol), logger.WARNING, "transactionRoutes.go")
 	response := TransactionResponse{
 		Message:   "Verkauf wurde getätigt",
 		State:     "Success",
 		Title:     "Titel wurde verkauft und der Betrag ihrem Konto gutgeschrieben",
 		Operation: "-",
+		Value:     additionalBalance.String(),
 	}
 	obj, _ := json.Marshal(response)
 	w.Write([]byte(obj))
@@ -203,6 +238,7 @@ func AddTransaction(w http.ResponseWriter, r *http.Request) {
 	}
 	validator := sec.NewValidator(request.AuthToken, request.Username)
 	if validator.IsValidToken(jwtKey) == false {
+		logger.LogMessageWithOrigin(fmt.Sprintf("User: %s was not able to be authenticated", currentUser.Username), logger.WARNING, "transactionRoutes.go | AddTransaction")
 		response := TransactionResponse{
 			Message:   "Leider konnten Sie nicht durch den Server authentizifiert werden. Bitte neu einloggen",
 			State:     "Breach",
@@ -220,6 +256,7 @@ func AddTransaction(w http.ResponseWriter, r *http.Request) {
 	amount := float64(request.Amount)
 	totalPrice = totalPrice.Mul(totalPrice, big.NewFloat(amount))
 	if portfolio.Balance.Cmp(totalPrice) != 1 {
+		logger.LogMessageWithOrigin(fmt.Sprintf("User: %s tried to sell more than he had", currentUser.Username), logger.WARNING, "transactionRoutes.go | AddTransaction")
 		response := TransactionResponse{
 			Message:   "Dieser Kauf überschreitet leider Ihren Kontostand",
 			State:     "Failed",
@@ -230,16 +267,9 @@ func AddTransaction(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(obj))
 		return
 	}
-	/*
-		TODO: VALIDATE IF THE USER HAS THE RESSOURCES TO BUY OR SELL A STOCK
-	*/
 	transaction := transaction.NewTransaction(userID, request.Operation, request.Operation+" "+request.StockSymbol, request.Amount, requestedStock.Price, request.Date)
-	transaction.DatabaseConnection = database
-	transaction.Write(true)
-	createPortfolioItem(portfolio, requestedStock, currentUser, request.Amount, *totalPrice)
-	/*
-		TODO create portfolio_item and add to portfolio as well as reduction of balance on user
-	*/
+	database.CreateTransaction(transaction, portfolio, requestedStock, currentUser, request.Amount, *totalPrice, GetDatabaseInstance())
+	logger.LogMessageWithOrigin(fmt.Sprintf("User: %s bought %s", currentUser.Username, request.StockSymbol), logger.WARNING, "transactionRoutes.go | AddTransaction")
 	response := TransactionResponse{
 		Message:   "Kauf wird abgewickelt.. Dies kann je nach Auslastung einige Minuten dauern",
 		State:     "Success",
@@ -254,30 +284,6 @@ func loadStockInstance(stockSymbol string) stock.Stock {
 	stock := stock.NewStockEntry(stockSymbol, "5")
 	stock.Load()
 	return stock
-}
-
-//TODO implement transaction and rollback for all the queries below
-func createPortfolioItem(portfolio user.Portfolio, stockInstance stock.Stock, currentUser user.User, quantity int64, totalPrice big.Float) {
-	stockID := stockInstance.ID
-	buyPrice := stockInstance.Price
-	totalBuyPrice := totalPrice
-	portfolioItem := user.PortfolioItem{
-		StockID:       stockID,
-		BuyPrice:      buyPrice,
-		Quantity:      quantity,
-		TotalBuyPrice: totalBuyPrice.String(),
-	}
-	portfolioItem.Write(GetDatabaseInstance())
-	updatePortfolio(portfolio, totalBuyPrice, quantity, currentUser)
-	connectPortfolioItemWithPortfolio(portfolio, portfolioItem, currentUser)
-}
-
-func connectPortfolioItemWithPortfolio(portfolio user.Portfolio, item user.PortfolioItem, currentUser user.User) bool {
-	portfolioConnection := user.PortfolioToItem{
-		PortfolioID:     portfolio.ID,
-		PortfolioItemID: item.ID,
-	}
-	return portfolioConnection.Write(GetDatabaseInstance())
 }
 
 func AddDelayedTransaction(w http.ResponseWriter, r *http.Request) {
@@ -304,6 +310,7 @@ func AddDelayedTransaction(w http.ResponseWriter, r *http.Request) {
 	}
 	validator := sec.NewValidator(request.AuthToken, request.Username)
 	if validator.IsValidToken(jwtKey) == false {
+		logger.LogMessageWithOrigin(fmt.Sprintf("User: %s was not able to be validated", currentUser.Username), logger.WARNING, "transactionRoutes.go | AddDelayedTransaction")
 		response := TransactionResponse{
 			Message:   "Leider konnten Sie nicht durch den Server authentizifiert werden. Bitte neu einloggen",
 			State:     "Breach",
@@ -321,6 +328,7 @@ func AddDelayedTransaction(w http.ResponseWriter, r *http.Request) {
 	amount := float64(request.Amount)
 	totalPrice = totalPrice.Mul(totalPrice, big.NewFloat(amount))
 	if portfolio.Balance.Cmp(totalPrice) != 1 {
+		logger.LogMessageWithOrigin(fmt.Sprintf("User: %s tried to delay a buy action for more than he has", currentUser.Username), logger.WARNING, "transactionRoutes.go | AddDelayedTransaction")
 		response := TransactionResponse{
 			Message:   "Dieser Kauf überschreitet leider Ihren Kontostand",
 			State:     "Failed",
@@ -331,28 +339,30 @@ func AddDelayedTransaction(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(obj))
 		return
 	}
-	/*
-		TODO: VALIDATE IF THE USER HAS THE RESSOURCES TO BUY OR SELL A STOCK
-	*/
 	transaction := transaction.NewTransaction(userID, request.Operation, request.Operation+" "+request.StockSymbol, request.Amount, request.ExpectedStockPrice, request.Date)
-	transaction.DatabaseConnection = database
-	transaction.Write(false)
-	updatePortfolio(portfolio, *totalPrice, request.Amount, currentUser)
+	handler, err := GetDatabaseInstance().Begin()
+	transaction.Write(false, handler)
+	if database.UpdatePortfolio(portfolio, *totalPrice, request.Amount, currentUser, handler) == false {
+		handler.Rollback()
+		response := TransactionResponse{
+			Message:   "Kauf konnte nicht abgewickelt werden",
+			State:     "Failure",
+			Title:     "Kauf abgeschlossen.",
+			Operation: "-",
+			Value:     totalPrice.String(),
+		}
+		obj, _ := json.Marshal(response)
+		w.Write([]byte(obj))
+	}
+	logger.LogMessageWithOrigin(fmt.Sprintf("User: %s added delayed buy for %s", currentUser.Username, request.StockSymbol), logger.WARNING, "transactionRoutes.go | AddDelayedTransaction")
 	response := TransactionResponse{
-		Message:   "Kauf wird abgewickelt. Dies kann einige Minuten in Anspruch nehmen..",
-		State:     "Success!",
+		Message:   "Kaufaktion wird eingeleitet. Kauf wird am angegeben Datum eingeleitet.",
+		State:     "Success",
 		Title:     "Kauf abgeschlossen.",
 		Operation: "-",
+		Value:     totalPrice.String(),
 	}
+	handler.Commit()
 	obj, _ := json.Marshal(response)
 	w.Write([]byte(obj))
-}
-
-func updatePortfolio(portfolio user.Portfolio, totalPrice big.Float, quantity int64, currentUser user.User) {
-	newBalanceValue := portfolio.Balance.Sub(&portfolio.Balance, &totalPrice)
-	newCurrentValue := portfolio.CurrentValue.Add(&portfolio.CurrentValue, &totalPrice)
-	portfolio.Balance = *newBalanceValue
-	portfolio.CurrentValue = *newCurrentValue
-	portfolio.TotalStocks += quantity
-	portfolio.Update(GetDatabaseInstance())
 }

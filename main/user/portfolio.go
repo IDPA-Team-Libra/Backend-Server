@@ -68,21 +68,23 @@ func (portfolio *Portfolio) Write(userID int64, connection *sql.DB, startCapital
 	portfolio.ID = userID
 	portfolio.CurrentValue = *big.NewFloat(0.0)
 	portfolio.TotalStocks = 0
+	portfolio.Balance = *big.NewFloat(startCapital)
 	portfolio.StartCapital = *big.NewFloat(startCapital)
 	statement, err := connection.Prepare("INSERT INTO Portfolio(user_id, current_value,total_stocks,start_capital,balance) VALUES(?,?,0,?,?)")
-	defer statement.Close()
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
 	}
+	defer statement.Close()
 	_, err = statement.Exec(userID, 0.0, startCapital, startCapital)
 	if err != nil {
+		fmt.Println(err.Error())
 		return false
 	}
 	return true
 }
 
-func (portfolio *Portfolio) Update(connection *sql.DB) bool {
+func (portfolio *Portfolio) Update(connection *sql.Tx) bool {
 	statement, err := connection.Prepare("UPDATE Portfolio SET balance = ?, current_value = ?, total_stocks = ? WHERE id = ?")
 	defer statement.Close()
 	if err != nil {
@@ -110,16 +112,4 @@ func (portfolio *Portfolio) AddItem(portfolioItem PortfolioItem, connection *sql
 		return false
 	}
 	return true
-}
-
-func IncrementPortfolioTotalStockAndPrice() {
-
-}
-
-func (portfolio *Portfolio) RemoveItem() {
-
-}
-
-func (portfolio *Portfolio) StockAlreadyPresent() {
-
 }

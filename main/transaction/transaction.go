@@ -7,15 +7,14 @@ import (
 )
 
 type Transaction struct {
-	ID                 int64  `json:"id"`
-	UserID             int64  `json:"userID"`
-	Action             string `json:"action"`
-	Description        string `json:"description"`
-	Amount             int64  `json:"amount"`
-	Value              string `json:"value"`
-	Date               string `json:"date"`
-	Processed          bool   `json:"processed"`
-	DatabaseConnection *sql.DB
+	ID          int64  `json:"id"`
+	UserID      int64  `json:"userID"`
+	Action      string `json:"action"`
+	Description string `json:"description"`
+	Amount      int64  `json:"amount"`
+	Value       string `json:"value"`
+	Date        string `json:"date"`
+	Processed   bool   `json:"processed"`
 }
 
 func NewTransaction(UserID int64, Action string, Description string, Amount int64, Value string, Date string) Transaction {
@@ -30,9 +29,9 @@ func NewTransaction(UserID int64, Action string, Description string, Amount int6
 	return transaction
 }
 
-func (transaction *Transaction) LoadTransactions(userID int64) []Transaction {
+func (transaction *Transaction) LoadTransactions(userID int64, db_conn *sql.DB) []Transaction {
 	var transactions []Transaction
-	statement, err := transaction.DatabaseConnection.Prepare("SELECT action,description,amount,value,date,processed FROM transaction WHERE userID = ?")
+	statement, err := db_conn.Prepare("SELECT action,description,amount,value,date,processed FROM transaction WHERE userID = ?")
 	defer statement.Close()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -52,12 +51,12 @@ func (transaction *Transaction) LoadTransactions(userID int64) []Transaction {
 	return transactions
 }
 
-func (transaction *Transaction) Write(processed bool) bool {
+func (transaction *Transaction) Write(processed bool, connection *sql.Tx) bool {
 	insertionSequence := "INSERT INTO Transaction(userid,action,description,amount,value,processed,date) VALUES(?,?,?,?,?,?,CURDATE())"
 	if processed == false {
 		insertionSequence = "INSERT INTO Transaction(userid,action,description,amount,value,processed,date) VALUES(?,?,?,?,?,?,?)"
 	}
-	statement, err := transaction.DatabaseConnection.Prepare(insertionSequence)
+	statement, err := connection.Prepare(insertionSequence)
 	defer statement.Close()
 	if err != nil {
 		fmt.Println(err.Error())

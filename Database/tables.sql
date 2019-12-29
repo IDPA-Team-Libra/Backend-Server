@@ -23,7 +23,7 @@ CREATE TABLE transaction (
         action varchar (255),
         description varchar (255),
         amount INTEGER,
-        value Decimal (10, 4),
+        value Decimal (50, 10),
         date date,
         processed boolean,
         PRIMARY KEY (id),
@@ -44,10 +44,10 @@ CREATE TABLE stock (
 CREATE TABLE Portfolio (
         id INTEGER AUTO_INCREMENT,
         user_id INTEGER,
-        current_value Decimal (15, 4),
+        current_value Decimal (50, 10),
         total_stocks INTEGER,
-        balance Decimal (15, 4),
-        start_capital Decimal (15, 4),
+        balance Decimal (50, 10),
+        start_capital Decimal (50, 10),
         PRIMARY KEY (id),
         FOREIGN KEY (user_id) REFERENCES User (id)
 );
@@ -55,10 +55,10 @@ CREATE TABLE Portfolio (
 CREATE TABLE portfolio_item (
         id INTEGER AUTO_INCREMENT,
         stock_id INTEGER,
-        buy_price Decimal (10, 4),
+        buy_price Decimal (50,10),
         buy_date_time DATETIME,
         quantity INTEGER,
-        total_buy_price Decimal (10, 4),
+        total_buy_price Decimal (50, 10),
         PRIMARY KEY (id),
         FOREIGN KEY (stock_id) REFERENCES stock (id)
 );

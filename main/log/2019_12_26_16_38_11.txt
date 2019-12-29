@@ -1,3 +1,0 @@
-I: 2019/12/26 16:38:11.899141 logger_manger.go:27: Server has started on 3440
-W: 2019/12/26 16:43:59.263816 logger_manger.go:29: Ungültiges Passwort
-W: 2019/12/26 16:44:06.213890 logger_manger.go:29: Nutzer hat sich eingelogt | User N.Flueckiger@stud.bbbaden.ch3

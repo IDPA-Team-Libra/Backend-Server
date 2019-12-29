@@ -94,10 +94,10 @@ func (user *User) IsUniqueUsername(connection *sql.DB) bool {
 
 func GetUserIdByUsername(username string, connection *sql.DB) int64 {
 	statement, err := connection.Prepare("SELECT id FROM User WHERE username = ?")
-	defer statement.Close()
 	if err != nil {
 		fmt.Println(err.Error())
 	}
+	defer statement.Close()
 	result, err := statement.Query(username)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -132,11 +132,11 @@ func (user *User) GetPasswordHashByUsername(connection *sql.DB) (bool, string) {
 
 func (user *User) Write(connection *sql.DB) bool {
 	statement, err := connection.Prepare("INSERT INTO User(username,password,email,creationdate) VALUES(?,?,?,NOW())")
-	defer statement.Close()
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
 	}
+	defer statement.Close()
 	_, err = statement.Exec(user.Username, user.Password, user.Email)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -147,11 +147,11 @@ func (user *User) Write(connection *sql.DB) bool {
 
 func OverwritePasswordForUserId(userID int64, newPassword string, db_conn *sql.DB) bool {
 	statement, err := db_conn.Prepare("UPDATE user SET password = ? where id = ?")
-	defer statement.Close()
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
 	}
+	defer statement.Close()
 	_, err = statement.Exec(newPassword, userID)
 	if err != nil {
 		return false
