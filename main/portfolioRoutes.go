@@ -2,10 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/Liberatys/libra-back/main/logger"
+	"github.com/Liberatys/libra-back/main/sec"
 	"github.com/Liberatys/libra-back/main/transaction"
 	"github.com/Liberatys/libra-back/main/user"
 )
@@ -28,6 +30,18 @@ func GetPortfolio(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.LogMessage("Anfrage an Portfolio hatte invalides JSON", logger.INFO)
 		w.Write([]byte("Invalid json"))
+		return
+	}
+	validator := sec.NewValidator(currentUser.AccessToken, currentUser.Username)
+	if validator.IsValidToken(jwtKey) == false {
+		logger.LogMessage(fmt.Sprintf("Anfrage an GetUserTransaction hatte einen ungültigen jwt. | User: %s", currentUser.Username), logger.WARNING)
+		response := PortfolioContent{}
+		response.Message = "Invalid Token"
+		resp, err := json.Marshal(response)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		w.Write(resp)
 		return
 	}
 	user_instance := user.CreateUserInstance(currentUser.Username, currentUser.Password, "")
