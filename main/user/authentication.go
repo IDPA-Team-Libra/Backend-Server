@@ -1,6 +1,8 @@
 package user
 
 import (
+	"strings"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -15,10 +17,15 @@ func NewPasswordValidator(password string) PasswordValidatior {
 }
 
 func (passwordValidator *PasswordValidatior) isValidPassword() bool {
-	//TODO: Find a good way to validate the length and composition of a passwords
-	/*
-		TODO: Specify the password requirements and implement the todo above.
-	*/
+	if len(passwordValidator.Password) < 7 {
+		return false
+	}
+	if strings.ContainsAny(passwordValidator.Password, "@#$%^&!.-,") == false {
+		return false
+	}
+	if strings.ContainsAny(passwordValidator.Password, "1234567890") == false {
+		return false
+	}
 	return true
 }
 

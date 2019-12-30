@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/Liberatys/libra-back/main/logger"
+	"github.com/asaskevich/govalidator"
 )
 
-//TODO cleanup code
 type User struct {
 	ID               int64     `json:"id"`
 	Username         string    `json:"username"`
@@ -44,11 +44,20 @@ func (user *User) CreationSetup(connection *sql.DB) (bool, string) {
 	if user.Username == "" || user.Password == "" || user.Email == "" {
 		return false, "Ungültige Nutzerdaten"
 	}
+	if len(user.Username) < 5 {
+		return false, "Der Nutzername muss mindestens 5 Zeichen lang sein"
+	}
+	if govalidator.IsEmail(user.Email) == false {
+		return false, "Die angegebene Email-Adresse ist nicht gültig."
+	}
+	passwordValidator := NewPasswordValidator(user.Password)
+	if passwordValidator.isValidPassword() == false {
+		return false, "Ihr Passwort entspricht nicht dem vorgegebenen Format"
+	}
 	uniqueUsername := user.IsUniqueUsername(connection)
 	if uniqueUsername == false {
 		return false, "Username is not unique"
 	}
-	passwordValidator := NewPasswordValidator(user.Password)
 	user.Password = passwordValidator.HashPassword()
 	return true, "Usersetup complete"
 }
