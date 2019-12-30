@@ -7,10 +7,12 @@ import (
 
 	"github.com/Liberatys/Sanctuary/service"
 	"github.com/Liberatys/libra-back/main/apiconnection"
+	"github.com/Liberatys/libra-back/main/database"
 	"github.com/Liberatys/libra-back/main/logger"
 	"github.com/Liberatys/libra-back/main/mail"
 	"github.com/Liberatys/libra-back/main/stock"
 	"github.com/Liberatys/libra-back/main/user"
+	"github.com/robfig/cron"
 )
 
 var db_conn *sql.DB
@@ -18,10 +20,6 @@ var db_conn *sql.DB
 const (
 	EX_MODE = "TEST"
 )
-
-func setupDB() {
-
-}
 
 func SetupLogger() {
 	log_file_path, _ := filepath.Abs(fmt.Sprintf("log/libra_log"))
@@ -44,7 +42,7 @@ func main() {
 	defer logger.SyncLogger()
 	logger.LogMessage("Server has started on 3440", logger.INFO)
 	service.ActivateHTTPServer()
-	//service.SetDatabaseInformation("localhost", "3306", "mysql", "root", "Siera_001_DB", "libra")
+	service.SetDatabaseInformation("localhost", "3306", "mysql", "root", "Siera_001_DB", "libra")
 	//service.SetDatabaseInformation("localhost", "3306", "mysql", "root", "pw123", "libra")
 	db := service.GetDatabaseConnection()
 	db_conn = db
@@ -74,8 +72,10 @@ func main() {
 	service.AddHTTPRoute("/user/changePassword", ChangePassword)
 	service.AddHTTPRoute("/stock/all", GetStocks)
 	service.AddHTTPRoute("/transaction/buy", AddTransaction)
+	service.AddHTTPRoute("/transaction/get/delayed", GetDelayedTransactionsByUser)
 	service.AddHTTPRoute("/transaction/sell", RemoveTransaction)
-	service.AddHTTPRoute("/transaction/buy/delayed", AddDelayedTransaction)
+	service.AddHTTPRoute("/transaction/buy/delayed", AddDelayedBuyTransaction)
+	service.AddHTTPRoute("/transaction/sell/delayed", AddDelayedSellTransaction)
 	service.AddHTTPRoute("/transaction/all", GetUserTransaction)
 	service.AddHTTPRoute("/portfolio/get", GetPortfolio)
 	service.AddHTTPRoute("/authenticate/token", ValidateUserToken)
@@ -83,9 +83,18 @@ func main() {
 		END SPACE FOR ROUTES
 	*/
 	go apiconnection.LoadAllStocks("5")
+	database.StartBatchProcess(GetDatabaseInstance())
 	service.StartHTTPServer()
 }
 
 func setDatabaseReferences(database *sql.DB) {
 	stock.SetDatabaseConnection(GetDatabaseInstance())
+}
+
+func SetupCronJobs() {
+	c := cron.New()
+	c.AddFunc("@every 15m", func() {
+		apiconnection.LoadAllStocks("5")
+	})
+	c.Start()
 }

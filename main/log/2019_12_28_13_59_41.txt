@@ -1,6 +1,0 @@
-I: 2019/12/28 13:59:41.208634 logger_manger.go:27: Server has started on 3440
-W: 2019/12/28 14:12:01.172593 logger_manger.go:29: Nutzer hat sich eingeloggt | User hehe
-W: 2019/12/28 14:13:33.929912 logger_manger.go:29: Nutzer hat sich eingeloggt | User hehe
-W: 2019/12/28 14:20:51.738056 logger_manger.go:29: Nutzer hat sich eingeloggt | User hehe
-W: 2019/12/28 14:24:30.600791 logger_manger.go:29: Nutzer hat sich eingeloggt | User hehe
-W: 2019/12/28 17:25:16.873752 logger_manger.go:29: Nutzer hat sich eingeloggt | User hehe

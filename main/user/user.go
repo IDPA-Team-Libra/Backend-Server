@@ -92,6 +92,23 @@ func (user *User) IsUniqueUsername(connection *sql.DB) bool {
 	return true
 }
 
+func GetUsernameByID(userID int64, connection *sql.DB) string {
+	statement, err := connection.Prepare("SELECT username FROM User WHERE id = ?")
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	defer statement.Close()
+	result, err := statement.Query(userID)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	defer result.Close()
+	var username string
+	result.Next()
+	result.Scan(&username)
+	return username
+}
+
 func GetUserIdByUsername(username string, connection *sql.DB) int64 {
 	statement, err := connection.Prepare("SELECT id FROM User WHERE username = ?")
 	if err != nil {

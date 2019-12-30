@@ -102,3 +102,9 @@ func (stock *Stock) GetSymbolByID(id int64) string {
 	result.Scan(&stock.Symbol)
 	return stock.Symbol
 }
+
+func LoadStockInstance(stockSymbol string) Stock {
+	stock := NewStockEntry(stockSymbol, "5")
+	stock.Load()
+	return stock
+}

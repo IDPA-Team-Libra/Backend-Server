@@ -1,0 +1,39 @@
+db:
+    build: ./Database
+    dockerfile: Dockerfile
+    environment:
+        - MYSQL_ROOT_PASSWORD=SECUREPASS
+        - MYSQL_DATABASES=libra
+        - MYSQL_PORT=3306
+        - MYSQL_USER=administrator
+        - MYSQL_PASSWORD=LOCAL1234
+    expose:
+        - "3306"
+    ports:
+        - "3306:3306"
+
+server:
+    build: ./
+    dockerfile: Dockerfile
+    environment:
+        - SERVER_HTTP_PORT=3440
+        - SERVER_DATABASE_USERNAME=administrator
+        - SERVER_DATABASE_PASSWORD=LOCAL1234
+        - SERVER_DATABASE_DATABASE=libra
+        - SERVER_MODE=DEV
+    links:
+        - db
+    expose:
+        - 3440
+    ports:
+        - "3440:3440"
+
+# front_end:
+#     dockerfile: LOCATION
+#     environment:
+#     links:
+#         - server
+#     expose:
+#         - 4200
+#     ports:
+#         - "4200:4200"

@@ -63,6 +63,14 @@
   version = "v1.7.3"
 
 [[projects]]
+  digest = "1:c805e517269b0ba4c21ded5836019ed7d16953d4026cb7d00041d039c7906be9"
+  name = "github.com/natefinch/lumberjack"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "a96e63847dc3c67d17befa69c303767e2f84e54f"
+  version = "v2.1"
+
+[[projects]]
   digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
   name = "github.com/pkg/errors"
   packages = ["."]
@@ -179,14 +187,6 @@
   revision = "2caba252f4dc53eaf6b553000885530023f54623"
 
 [[projects]]
-  digest = "1:c805e517269b0ba4c21ded5836019ed7d16953d4026cb7d00041d039c7906be9"
-  name = "gopkg.in/natefinch/lumberjack.v2"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "a96e63847dc3c67d17befa69c303767e2f84e54f"
-  version = "v2.1"
-
-[[projects]]
   digest = "1:131158a88aad1f94854d0aa21a64af2802d0a470fb0f01cb33c04fafd2047111"
   name = "honnef.co/go/tools"
   packages = [
@@ -228,11 +228,11 @@
     "github.com/cmckee-dev/go-alpha-vantage",
     "github.com/dgrijalva/jwt-go",
     "github.com/go-mail/mail",
+    "github.com/natefinch/lumberjack",
     "github.com/robfig/cron",
     "go.uber.org/zap",
     "go.uber.org/zap/zapcore",
     "golang.org/x/crypto/bcrypt",
-    "gopkg.in/natefinch/lumberjack.v2",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

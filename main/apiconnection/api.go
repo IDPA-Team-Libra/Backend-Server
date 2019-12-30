@@ -8,7 +8,6 @@ import (
 	"github.com/Liberatys/libra-back/main/logger"
 	"github.com/Liberatys/libra-back/main/stock"
 	av "github.com/cmckee-dev/go-alpha-vantage"
-	"github.com/robfig/cron"
 )
 
 //TODO hide api_key
@@ -49,8 +48,6 @@ var wg sync.WaitGroup
 var current_wait_group int64
 var max_routines int64
 
-// TODO check this code
-// TODO check if it only executes given max_routines at a time
 func LoadAllStocks(timeInterval string) {
 	max_routines = 4
 	var current_wait_group int64
@@ -80,13 +77,4 @@ func LoadAndStoreStock(stocking stock.Stock) {
 	if success {
 		stock.Store()
 	}
-}
-
-// TODO validate the execution of the cron jobs
-func StartCronJobs() {
-	c := cron.New()
-	c.AddFunc("@every 15m", func() {
-		LoadAllStocks("5")
-	})
-	c.Start()
 }

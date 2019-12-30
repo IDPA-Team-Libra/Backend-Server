@@ -33,7 +33,7 @@ func GetPortfolio(w http.ResponseWriter, r *http.Request) {
 	user_instance := user.CreateUserInstance(currentUser.Username, currentUser.Password, "")
 	user_instance.ID = user.GetUserIdByUsername(user_instance.Username, GetDatabaseInstance())
 	trans := transaction.Transaction{}
-	transactions := trans.LoadTransactions(user_instance.ID, GetDatabaseInstance())
+	transactions := trans.LoadTransactionsByProcessState(user_instance.ID, GetDatabaseInstance(), true)
 	response := PortfolioContent{}
 	response.Message = "Success"
 	item_data, _ := json.Marshal(user.LoadUserItems(user_instance.ID, "*", GetDatabaseInstance()))

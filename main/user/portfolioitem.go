@@ -72,7 +72,7 @@ func LoadUserItems(userID int64, Symbol string, connection *sql.DB) []PortfolioI
 	return items
 }
 
-func (item *PortfolioItem) Update(connetion *sql.DB) bool {
+func (item *PortfolioItem) Update(connetion *sql.Tx) bool {
 	statement, err := connetion.Prepare("UPDATE portfolio_item SET quantity = ? WHERE id = ?")
 	defer statement.Close()
 	if err != nil {
@@ -87,14 +87,14 @@ func (item *PortfolioItem) Update(connetion *sql.DB) bool {
 	return true
 }
 
-func (item *PortfolioItem) Remove(connection *sql.DB) bool {
+func (item *PortfolioItem) Remove(connection *sql.Tx) bool {
 	if executeRemove(connection, "DELETE FROM portfolio_to_item WHERE portfolio_item_id = ?", item.ID) {
 		return executeRemove(connection, "DELETE FROM portfolio_item WHERE id = ?", item.ID)
 	}
 	return false
 }
 
-func executeRemove(conntection *sql.DB, query string, parameters ...interface{}) bool {
+func executeRemove(conntection *sql.Tx, query string, parameters ...interface{}) bool {
 	statement, err := conntection.Prepare(query)
 	defer statement.Close()
 	if err != nil {
