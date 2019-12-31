@@ -124,7 +124,6 @@ func GetDelayedTransactionsByUser(w http.ResponseWriter, r *http.Request) {
 		w.Write(obj)
 		return
 	}
-	fmt.Println("Something")
 	w.Write(jsonObject)
 }
 
