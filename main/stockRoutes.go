@@ -22,7 +22,7 @@ func PurgeStockScreen() {
 }
 
 func GetStocks(w http.ResponseWriter, r *http.Request) {
-	if len(stockData) > 0 || stockData == nil {
+	if len(stockData) > 0 && stockData != nil {
 		w.Write(serializedStockItems)
 		return
 	}
