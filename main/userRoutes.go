@@ -49,9 +49,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Invalid json"))
 		return
 	}
-	user_instance := user.CreateUserInstance(currentUser.Username, currentUser.Password, "")
-	user_instance.ID = user.GetUserIdByUsername(user_instance.Username, GetDatabaseInstance())
-	success, message := user_instance.Authenticate(GetDatabaseInstance())
+	userInstance := user.CreateUserInstance(currentUser.Username, currentUser.Password, "")
+	userInstance.ID = user.GetUserIdByUsername(userInstance.Username, GetDatabaseInstance())
+	success, message := userInstance.Authenticate(GetDatabaseInstance())
 	response := sec.Response{}
 	if success == true {
 		response = GenerateTokenForUser(currentUser.Username)
@@ -65,10 +65,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 	response.Message = message
 	currentUser.Password = ""
-	portfolio_inst := user.LoadPortfolio(currentUser.Username, GetDatabaseInstance())
-	currentUser.Portfolio = ConvertPortfolioToSerialized(portfolio_inst)
-	user_data, _ := json.Marshal(currentUser)
-	response.UserData = string(user_data)
+	portfolioInstance := user.LoadPortfolio(currentUser.Username, GetDatabaseInstance())
+	currentUser.Portfolio = ConvertPortfolioToSerialized(portfolioInstance)
+	userData, _ := json.Marshal(currentUser)
+	response.UserData = string(userData)
 	resp, err := json.Marshal(response)
 	if err != nil {
 		logger.LogMessage(message, logger.WARNING)
@@ -76,18 +76,18 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp)
 }
 
-func ConvertPortfolioToSerialized(portfolio_inst user.Portfolio) SerializedPortfolio {
+func ConvertPortfolioToSerialized(portfolioInstance user.Portfolio) SerializedPortfolio {
 	serializedPortfolio := SerializedPortfolio{
-		CurrentValue:   portfolio_inst.CurrentValue.String(),
-		StartCapital:   portfolio_inst.StartCapital.String(),
-		TotalStocks:    strconv.FormatInt(portfolio_inst.TotalStocks, 10),
-		CurrentBalance: portfolio_inst.Balance.String(),
+		CurrentValue:   portfolioInstance.CurrentValue.String(),
+		StartCapital:   portfolioInstance.StartCapital.String(),
+		TotalStocks:    strconv.FormatInt(portfolioInstance.TotalStocks, 10),
+		CurrentBalance: portfolioInstance.Balance.String(),
 	}
 	return serializedPortfolio
 }
 
 const (
-	START_CAPITAL = 1000000
+	DefaultStartCapital = 1000000
 )
 
 func GenerateTokenForUser(username string) sec.Response {
@@ -107,42 +107,41 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Invalid json"))
 		return
 	}
-	user_instance := user.CreateUserInstance(currentUser.Username, currentUser.Password, currentUser.Email)
-	uniqueUsername := user_instance.IsUniqueUsername(GetDatabaseInstance())
+	userInstance := user.CreateUserInstance(currentUser.Username, currentUser.Password, currentUser.Email)
+	uniqueUsername := userInstance.IsUniqueUsername(GetDatabaseInstance())
 	if uniqueUsername == true {
-		success, error_message := user_instance.CreationSetup(GetDatabaseInstance())
+		success, errorMessage := userInstance.CreationSetup(GetDatabaseInstance())
 		if success == false {
-			logger.LogMessage(error_message, logger.WARNING)
-			w.Write([]byte(error_message))
+			logger.LogMessage(errorMessage, logger.WARNING)
+			w.Write([]byte(errorMessage))
 			return
 		}
-		if user_instance.Write(GetDatabaseInstance()) == false {
+		if userInstance.Write(GetDatabaseInstance()) == false {
 			logger.LogMessage(fmt.Sprintf("Ungültige Daten in der Nutzer erstellung | Daten %s|%s", currentUser.Username, currentUser.Email), logger.WARNING)
 			w.Write([]byte("Benutzer konnte nicht erstellt werden. Bitte an Kundendienst wenden"))
 			return
-		} else {
-			response := GenerateTokenForUser(currentUser.Username)
-			response.Message = "Success"
-			user_id := user.GetUserIdByUsername(user_instance.Username, GetDatabaseInstance())
-			portfolio := user.Portfolio{}
-			var accountStartBalance float64
-			// if no value is set for the start balance, just take 100000 as a fall backnumber
-			if currentUser.StartBalance == "" {
-				accountStartBalance = START_CAPITAL
-			} else {
-				accountStartBalance, _ = strconv.ParseFloat(currentUser.StartBalance, 64)
-			}
-			portfolio.Write(user_id, GetDatabaseInstance(), accountStartBalance)
-			currentUser.Password = ""
-			currentUser.Portfolio = ConvertPortfolioToSerialized(portfolio)
-			user_data, _ := json.Marshal(currentUser)
-			response.UserData = string(user_data)
-			resp, err := json.Marshal(response)
-			if err != nil {
-				logger.LogMessage(fmt.Sprintf("Invalid Authentication | User %s", currentUser.Username), logger.WARNING)
-			}
-			w.Write(resp)
 		}
+		response := GenerateTokenForUser(currentUser.Username)
+		response.Message = "Success"
+		userID := user.GetUserIdByUsername(userInstance.Username, GetDatabaseInstance())
+		portfolio := user.Portfolio{}
+		var accountStartBalance float64
+		// if no value is set for the start balance, just take 100000 as a fall backnumber
+		if currentUser.StartBalance == "" {
+			accountStartBalance = DefaultStartCapital
+		} else {
+			accountStartBalance, _ = strconv.ParseFloat(currentUser.StartBalance, 64)
+		}
+		portfolio.Write(userID, GetDatabaseInstance(), accountStartBalance)
+		currentUser.Password = ""
+		currentUser.Portfolio = ConvertPortfolioToSerialized(portfolio)
+		userData, _ := json.Marshal(currentUser)
+		response.UserData = string(userData)
+		resp, err := json.Marshal(response)
+		if err != nil {
+			logger.LogMessage(fmt.Sprintf("Invalid Authentication | User %s", currentUser.Username), logger.WARNING)
+		}
+		w.Write(resp)
 	} else {
 		responseObject, _ := json.Marshal("Benutzername bereits vergeben")
 		w.Write(responseObject)
@@ -248,9 +247,9 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 }
 
 func changePassword(username string, newPassword string) bool {
-	password_validator := user.NewPasswordValidator(newPassword)
-	pw_hash := password_validator.HashPassword()
+	passwordValidator := user.NewPasswordValidator(newPassword)
+	passwordHash := passwordValidator.HashPassword()
 	userID := user.GetUserIdByUsername(username, GetDatabaseInstance())
-	success := user.OverwritePasswordForUserId(userID, pw_hash, GetDatabaseInstance())
+	success := user.OverwritePasswordForUserId(userID, passwordHash, GetDatabaseInstance())
 	return success
 }

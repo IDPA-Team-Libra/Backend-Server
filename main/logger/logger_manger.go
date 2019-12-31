@@ -18,25 +18,25 @@ func SetupLogger(filePath string, rotationSizeInMB int, numberofBackups int) {
 	encoderCfg := zap.NewProductionEncoderConfig()
 	encoderCfg.TimeKey = "timestamp"
 	encoderCfg.EncodeTime = zapcore.ISO8601TimeEncoder
-	sync_writer := zapcore.AddSync(&lumberjack.Logger{
+	snycWriter := zapcore.AddSync(&lumberjack.Logger{
 		Filename:   filePath,
 		MaxSize:    50, // megabytes
 		MaxBackups: 10,
 		MaxAge:     60,    //days
 		Compress:   false, // disabled by default
 	})
-	logger_instance = zap.New(zapcore.NewCore(
+	loggerInstance = zap.New(zapcore.NewCore(
 		zapcore.NewJSONEncoder(encoderCfg),
-		sync_writer,
+		snycWriter,
 		atom,
 	)).Sugar()
 }
 
 func SyncLogger() {
-	logger_instance.Sync()
+	loggerInstance.Sync()
 }
 
-var logger_instance *zap.SugaredLogger
+var loggerInstance *zap.SugaredLogger
 
 type LogLevel int64
 
@@ -52,20 +52,20 @@ func LogMessage(message string, logLevel LogLevel, fields ...zap.Field) {
 		return
 	}
 	if logLevel == INFO {
-		logger_instance.Info(message, fields)
+		loggerInstance.Info(message, fields)
 	} else if logLevel == WARNING {
-		logger_instance.Warn(message, fields)
+		loggerInstance.Warn(message, fields)
 	} else {
-		logger_instance.Error(message, fields)
+		loggerInstance.Error(message, fields)
 	}
 }
 func LogWithoutFields(message string, logLevel LogLevel) {
 	if logLevel == INFO {
-		logger_instance.Info(message)
+		loggerInstance.Info(message)
 	} else if logLevel == WARNING {
-		logger_instance.Warn(message)
+		loggerInstance.Warn(message)
 	} else {
-		logger_instance.Error(message)
+		loggerInstance.Error(message)
 	}
 }
 func LogMessageWithOrigin(message string, logLevel LogLevel, origin string) {

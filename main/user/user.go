@@ -17,21 +17,6 @@ type User struct {
 	Portfolio        Portfolio `json:"portfolio"`
 }
 
-type AccessToken struct {
-	userID       string
-	username     string
-	accessToken  string
-	handDateTime string
-}
-
-type Event struct {
-	id     int
-	userID int
-	kind   string
-	date   string
-	status string
-}
-
 func CreateUserInstance(username string, password string, email string) User {
 	return User{
 		Username: username,
@@ -66,12 +51,12 @@ func (user *User) Authenticate(connection *sql.DB) (bool, string) {
 	if user.Username == "" || user.Password == "" {
 		return false, "Ungültige Nutzerdaten"
 	}
-	success, password_hash := user.GetPasswordHashByUsername(connection)
+	success, passwordHash := user.GetPasswordHashByUsername(connection)
 	if success == false {
-		return false, password_hash
+		return false, passwordHash
 	}
-	password_auth := NewPasswordValidator(user.Password)
-	isValidPassword := password_auth.comparePasswords(password_hash)
+	passwordValidator := NewPasswordValidator(user.Password)
+	isValidPassword := passwordValidator.comparePasswords(passwordHash)
 	if isValidPassword == true {
 		return true, "Success"
 	}
@@ -82,13 +67,11 @@ func (user *User) IsUniqueUsername(connection *sql.DB) bool {
 	statement, err := connection.Prepare("SELECT count(*) FROM User WHERE username = ?")
 	defer statement.Close()
 	if err != nil {
-		fmt.Println(err.Error())
 		logger.LogMessage(err.Error(), logger.ERROR)
 		return false
 	}
 	result, err := statement.Query(user.Username)
 	if err != nil {
-		fmt.Println(err.Error())
 		logger.LogMessage(err.Error(), logger.ERROR)
 	}
 	defer result.Close()
@@ -104,12 +87,10 @@ func (user *User) IsUniqueUsername(connection *sql.DB) bool {
 func GetUsernameByID(userID int64, connection *sql.DB) string {
 	statement, err := connection.Prepare("SELECT username FROM User WHERE id = ?")
 	if err != nil {
-		fmt.Println(err.Error())
 	}
 	defer statement.Close()
 	result, err := statement.Query(userID)
 	if err != nil {
-		fmt.Println(err.Error())
 	}
 	defer result.Close()
 	var username string
@@ -121,12 +102,10 @@ func GetUsernameByID(userID int64, connection *sql.DB) string {
 func GetUserIdByUsername(username string, connection *sql.DB) int64 {
 	statement, err := connection.Prepare("SELECT id FROM User WHERE username = ?")
 	if err != nil {
-		fmt.Println(err.Error())
 	}
 	defer statement.Close()
 	result, err := statement.Query(username)
 	if err != nil {
-		fmt.Println(err.Error())
 	}
 	defer result.Close()
 	var id int64
@@ -171,8 +150,8 @@ func (user *User) Write(connection *sql.DB) bool {
 	return true
 }
 
-func OverwritePasswordForUserId(userID int64, newPassword string, db_conn *sql.DB) bool {
-	statement, err := db_conn.Prepare("UPDATE user SET password = ? where id = ?")
+func OverwritePasswordForUserId(userID int64, newPassword string, databaseConnection *sql.DB) bool {
+	statement, err := databaseConnection.Prepare("UPDATE user SET password = ? where id = ?")
 	if err != nil {
 		fmt.Println(err.Error())
 		return false

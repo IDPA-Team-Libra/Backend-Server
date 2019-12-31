@@ -12,20 +12,20 @@ import (
 	"github.com/Liberatys/libra-back/main/user"
 )
 
-func StartBatchProcess(database_connection *sql.DB) {
-	transactions := LoadDelayedTransactions(database_connection)
+func StartBatchProcess(databaseConnection *sql.DB) {
+	transactions := LoadDelayedTransactions(databaseConnection)
 	for _, value := range transactions {
 		if value.Action == "buy" {
-			BatchBuyTransactions(value, database_connection)
+			BatchBuyTransactions(value, databaseConnection)
 		} else {
-			BatchSellTransactions(value, database_connection)
+			BatchSellTransactions(value, databaseConnection)
 		}
 	}
 }
 
-func LoadDelayedTransactions(database_connection *sql.DB) []transaction.Transaction {
+func LoadDelayedTransactions(databaseConnection *sql.DB) []transaction.Transaction {
 	transaction := transaction.Transaction{}
-	return transaction.LoadTransactionsByProcessState(-1, database_connection, false)
+	return transaction.LoadTransactionsByProcessState(-1, databaseConnection, false)
 }
 
 func BatchBuyTransactions(transaction transaction.Transaction, conn *sql.DB) bool {
@@ -69,10 +69,10 @@ func BatchSellTransactions(transaction transaction.Transaction, conn *sql.DB) bo
 		Username: user.GetUsernameByID(transaction.UserID, conn),
 	}
 	stockSymbol := ExtractStockNameWithTrim(transaction.Description)
-	user_instance := user.CreateUserInstance(currentUser.Username, "", "")
-	user_instance.ID = user.GetUserIdByUsername(currentUser.Username, conn)
+	userInstance := user.CreateUserInstance(currentUser.Username, "", "")
+	userInstance.ID = user.GetUserIdByUsername(currentUser.Username, conn)
 	requestedStock := stock.LoadStockInstance(stockSymbol)
-	items := user.LoadUserItems(user_instance.ID, stockSymbol, conn)
+	items := user.LoadUserItems(userInstance.ID, stockSymbol, conn)
 	totalStockQuantity := CalculateTotalStocks(items)
 	requestCount := transaction.Amount
 	transaction.Remove(conn)
@@ -115,7 +115,7 @@ func MultiplyString(first, second string) *big.Float {
 	return firstFloat.Mul(firstFloat, secondFloat)
 }
 func SubtractStocksFromTotalAmount(items []user.PortfolioItem, requestCount int64, conn *sql.Tx) []user.PortfolioItem {
-	for index, _ := range items {
+	for index := range items {
 		if requestCount > 0 {
 			quantity := items[index].Quantity
 			if quantity <= requestCount {
@@ -137,8 +137,8 @@ func SubtractStocksFromTotalAmount(items []user.PortfolioItem, requestCount int6
 
 func CalculateTotalStocks(items []user.PortfolioItem) int64 {
 	var counter int64
-	for _, stock := range items {
-		counter += stock.Quantity
+	for index := range items {
+		counter += items[index].Quantity
 	}
 	return counter
 }

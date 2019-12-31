@@ -72,7 +72,7 @@ func GetUserTransaction(w http.ResponseWriter, r *http.Request) {
 	userID := user.GetUserIdByUsername(request.Username, GetDatabaseInstance())
 	trans := transaction.Transaction{}
 	transactions := trans.LoadTransactionsByProcessState(userID, GetDatabaseInstance(), true)
-	json_obj, err := json.Marshal(transactions)
+	jsonObject, err := json.Marshal(transactions)
 	if err != nil {
 		fmt.Println(err.Error())
 		logger.LogMessage(fmt.Sprintf("Das Request Format in einer Anfrage an GetUserTransaction wurde nicht eingehalten | User: %s", currentUser.Username), logger.WARNING)
@@ -80,7 +80,7 @@ func GetUserTransaction(w http.ResponseWriter, r *http.Request) {
 		w.Write(obj)
 		return
 	}
-	w.Write(json_obj)
+	w.Write(jsonObject)
 }
 
 func GetDelayedTransactionsByUser(w http.ResponseWriter, r *http.Request) {
@@ -116,7 +116,7 @@ func GetDelayedTransactionsByUser(w http.ResponseWriter, r *http.Request) {
 	userID := user.GetUserIdByUsername(request.Username, GetDatabaseInstance())
 	trans := transaction.Transaction{}
 	transactions := trans.LoadTransactionsByProcessState(userID, GetDatabaseInstance(), false)
-	json_obj, err := json.Marshal(transactions)
+	jsonObject, err := json.Marshal(transactions)
 	if err != nil {
 		fmt.Println(err.Error())
 		logger.LogMessage(fmt.Sprintf("Das Request Format in einer Anfrage an GetUserTransaction wurde nicht eingehalten | User: %s", currentUser.Username), logger.WARNING)
@@ -125,7 +125,7 @@ func GetDelayedTransactionsByUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Println("Something")
-	w.Write(json_obj)
+	w.Write(jsonObject)
 }
 
 func RemoveTransaction(w http.ResponseWriter, r *http.Request) {
@@ -158,10 +158,10 @@ func RemoveTransaction(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(obj))
 		return
 	}
-	user_instance := user.CreateUserInstance(currentUser.Username, currentUser.Password, "")
-	user_instance.ID = user.GetUserIdByUsername(request.Username, GetDatabaseInstance())
+	userInstance := user.CreateUserInstance(currentUser.Username, currentUser.Password, "")
+	userInstance.ID = user.GetUserIdByUsername(request.Username, GetDatabaseInstance())
 	requestedStock := stock.LoadStockInstance(request.StockSymbol)
-	items := user.LoadUserItems(user_instance.ID, request.StockSymbol, GetDatabaseInstance())
+	items := user.LoadUserItems(userInstance.ID, request.StockSymbol, GetDatabaseInstance())
 	totalStockQuantity := database.CalculateTotalStocks(items)
 	requestCount := request.Amount
 	if totalStockQuantity < requestCount {
@@ -184,7 +184,7 @@ func RemoveTransaction(w http.ResponseWriter, r *http.Request) {
 		w.Write(obj)
 		return
 	}
-	transaction := transaction.NewTransaction(user_instance.ID, request.Operation, request.Operation+" "+request.StockSymbol, request.Amount, requestedStock.Price, request.Date)
+	transaction := transaction.NewTransaction(userInstance.ID, request.Operation, request.Operation+" "+request.StockSymbol, request.Amount, requestedStock.Price, request.Date)
 	if transaction.Write(true, handler) == false {
 		handler.Rollback()
 		obj, _ := json.Marshal("Invalid request format")

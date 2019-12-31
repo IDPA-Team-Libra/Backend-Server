@@ -20,7 +20,7 @@ type Response struct {
 }
 
 func (creator *TokenCreator) CreateToken() Response {
-	expirationTime := time.Now().Add(5 * time.Minute)
+	expirationTime := time.Now().Add(300 * time.Minute)
 	claims := &Claims{
 		Username: creator.Username,
 		StandardClaims: jwt.StandardClaims{

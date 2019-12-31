@@ -45,27 +45,27 @@ func GetStockDataForSymbol(recovered_stock stock.Stock, interval av.TimeInterval
 //}
 
 var wg sync.WaitGroup
-var current_wait_group int64
-var max_routines int64
+var currentWaitGroup int64
+var maxRoutines int64
 
 func LoadAllStocks(timeInterval string) {
-	max_routines = 4
-	var current_wait_group int64
+	//because the free version of alpha-vantage, has a limitation, also limit the concrrent routines fetching stocks
+	maxRoutines = 4
+	var currentWaitGroup int64
 	var stocks []stock.Stock
 	stocks = stock.LoadAllStockSymbols(timeInterval)
 	logger.LogMessage("Starting to fetch stocks", logger.INFO)
-	for _, value := range stocks {
+	for index := range stocks {
 		wg.Add(1)
-		current_wait_group += 1
-		LoadAndStoreStock(value)
-		if current_wait_group >= max_routines {
-			current_wait_group = 0
+		currentWaitGroup++
+		LoadAndStoreStock(stocks[index])
+		if currentWaitGroup >= maxRoutines {
+			currentWaitGroup = 0
 			time.Sleep(1 * time.Minute)
 			wg.Wait()
-			fmt.Println("Sleep")
 		}
 	}
-	current_wait_group = 0
+	currentWaitGroup = 0
 	wg.Wait()
 	logger.LogMessage("Finished loading stocks", logger.INFO)
 }

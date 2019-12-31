@@ -1,0 +1,285 @@
+@startuml
+namespace database {
+    interface Handler  {
+        + Write() 
+        + Remove() 
+        + Query() 
+        + Load() 
+
+    }
+}
+
+
+
+namespace logger {
+    interface Logger  {
+        + Log( string) bool
+        + GetDepth() int64
+        + FormatLog( string,  LogLevel) string
+        + CheckState() bool
+        + GetType() string
+
+    }
+    class logger.LogLevel << (T, #FF7700) >>  {
+    }
+}
+
+
+
+namespace mail {
+    class Mail << (S,Aquamarine) >> {
+        + Sender string
+        + Receaver string
+        + GmailPass string
+        + Message string
+        + Subject string
+
+        + SendEmail(Receaver string) 
+
+    }
+    class smtpServer << (S,Aquamarine) >> {
+        - host string
+        - port string
+
+        - serverName() string
+
+    }
+}
+
+
+
+namespace main {
+    class Author << (S,Aquamarine) >> {
+        + Token string
+        + Username string
+
+    }
+    class FutureTransactionOption << (S,Aquamarine) >> {
+        + TransactionRequest TransactionRequest
+        + SetDate string
+
+    }
+    class PasswordChangeRequest << (S,Aquamarine) >> {
+        + Username string
+        + AuthToken string
+        + NewPassword string
+
+    }
+    class PortfolioContent << (S,Aquamarine) >> {
+        + Message string
+        + Items string
+        + Transactions string
+
+    }
+    class SerializedPortfolio << (S,Aquamarine) >> {
+        + CurrentBalance string
+        + CurrentValue string
+        + TotalStocks string
+        + StartCapital string
+
+    }
+    class StockHolderstruct << (S,Aquamarine) >> {
+        + Stocks []stock.Stock
+
+    }
+    class TransactionRequest << (S,Aquamarine) >> {
+        + AuthToken string
+        + Username string
+        + StockSymbol string
+        + Operation string
+        + Amount int64
+        + Date string
+        + ExpectedStockPrice string
+
+    }
+    class TransactionResponse << (S,Aquamarine) >> {
+        + Message string
+        + State string
+        + Title string
+        + Operation string
+        + Value string
+
+    }
+    class User << (S,Aquamarine) >> {
+        + Username string
+        + Password string
+        + Email string
+        + StartBalance string
+        + AccessToken string
+        + Portfolio SerializedPortfolio
+
+    }
+}
+
+
+"main.FutureTransactionOption""uses" o-- "main.TransactionRequest"
+"main.StockHolderstruct""uses" o-- "stock.Stock"
+"main.User""uses" o-- "main.SerializedPortfolio"
+
+namespace sec {
+    class Claims << (S,Aquamarine) >> {
+        + Username string
+
+    }
+    class Response << (S,Aquamarine) >> {
+        + Message string
+        + TokenName string
+        + Token string
+        + ExpirationTime int64
+        + UserData string
+
+    }
+    class TokenCreator << (S,Aquamarine) >> {
+        + Username string
+        + Secret []byte
+
+        + CreateToken() Response
+
+    }
+    class Validator << (S,Aquamarine) >> {
+        - tokenString string
+        - username string
+        - secret_key string
+
+        + IsValidToken(secret []byte) bool
+
+    }
+}
+"jwt.StandardClaims" *-- "extends""sec.Claims"
+
+
+
+namespace stock {
+    class Stock << (S,Aquamarine) >> {
+        + ID int64
+        + Company string
+        + Symbol string
+        + Price string
+        + TimeData string
+        + Data string
+
+        + IsPresent() bool
+        + Load() bool
+        + Store() bool
+        + GetSymbolByID(id int64) string
+
+    }
+}
+
+
+
+namespace transaction {
+    class Transaction << (S,Aquamarine) >> {
+        + ID int64
+        + UserID int64
+        + Action string
+        + Description string
+        + Amount int64
+        + Value string
+        + Date string
+        + Processed bool
+
+        + LoadTransactionsByProcessState(userID int64, db_conn *sql.DB, processed bool) []Transaction
+        + Write(processed bool, connection *sql.Tx) bool
+        + Remove(sql_conn *sql.DB) bool
+
+    }
+}
+
+
+
+namespace user {
+    class AccessToken << (S,Aquamarine) >> {
+        - userID string
+        - username string
+        - accessToken string
+        - handDateTime string
+
+    }
+    class Event << (S,Aquamarine) >> {
+        - id int
+        - userID int
+        - kind string
+        - date string
+        - status string
+
+    }
+    class PasswordValidatior << (S,Aquamarine) >> {
+        + Password string
+
+        - isValidPassword() bool
+        - comparePasswords(passwordHash string) bool
+
+        + HashPassword() string
+
+    }
+    class Portfolio << (S,Aquamarine) >> {
+        + ID int64
+        + Balance big.Float
+        + CurrentValue big.Float
+        + TotalStocks int64
+        + StartCapital big.Float
+        + Items []PortfolioItem
+
+        + Write(userID int64, connection *sql.DB, startCapital float64) bool
+        + Update(connection *sql.Tx) bool
+        + AddItem(portfolioItem PortfolioItem, connection *sql.DB) bool
+
+    }
+    class PortfolioItem << (S,Aquamarine) >> {
+        + ID int64
+        + StockID int64
+        + StockName string
+        + CompanyName string
+        + BuyPrice string
+        + Quantity int64
+        + TotalBuyPrice string
+        + CurrentPrice string
+
+        + Write(connection *sql.Tx) bool
+        + Update(connetion *sql.Tx) bool
+        + Remove(connection *sql.Tx) bool
+
+    }
+    class PortfolioToItem << (S,Aquamarine) >> {
+        + PortfolioID int64
+        + PortfolioItemID int64
+
+        + Write(connection *sql.Tx) bool
+        + Destruct() 
+
+    }
+    class StubReader << (S,Aquamarine) >> {
+        + CurrentValue string
+        + Balance string
+        + TotalStocks int64
+        + StartCapital string
+        + ID int64
+
+    }
+    class User << (S,Aquamarine) >> {
+        + ID int64
+        + Username string
+        + Password string
+        + Email string
+        + RegistrationDate string
+        + Portfolio Portfolio
+
+        + CreationSetup(connection *sql.DB) (bool, string)
+        + Authenticate(connection *sql.DB) (bool, string)
+        + IsUniqueUsername(connection *sql.DB) bool
+        + GetPasswordHashByUsername(connection *sql.DB) (bool, string)
+        + Write(connection *sql.DB) bool
+        + Remove() bool
+        + QueryAllConnectedData() string
+
+    }
+}
+
+
+"user.Portfolio""uses" o-- "big.Float"
+"user.Portfolio""uses" o-- "user.PortfolioItem"
+"user.User""uses" o-- "user.Portfolio"
+
+"__builtin__.int64" #.. "alias of""logger.LogLevel"
+@enduml

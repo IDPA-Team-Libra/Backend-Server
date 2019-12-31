@@ -23,6 +23,14 @@
   revision = "4684ed9ba301254635e6c800d42aea83d3b03121"
 
 [[projects]]
+  digest = "1:320e7ead93de9fd2b0e59b50fd92a4d50c1f8ab455d96bc2eb083267453a9709"
+  name = "github.com/asaskevich/govalidator"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "ccb8e960c48f04d6935e72476ae4a51028f9e22f"
+  version = "v9"
+
+[[projects]]
   branch = "master"
   digest = "1:e18ab9c3fcabf0bd47ef009fcd8a80c0cfb642b48984395bfd542cd3c507f3b8"
   name = "github.com/cmckee-dev/go-alpha-vantage"
@@ -225,6 +233,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/Liberatys/Sanctuary/service",
+    "github.com/asaskevich/govalidator",
     "github.com/cmckee-dev/go-alpha-vantage",
     "github.com/dgrijalva/jwt-go",
     "github.com/go-mail/mail",

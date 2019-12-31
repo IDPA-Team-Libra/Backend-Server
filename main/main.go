@@ -15,19 +15,19 @@ import (
 	"github.com/robfig/cron"
 )
 
-var db_conn *sql.DB
+var dbConn *sql.DB
 
 const (
-	EX_MODE = "TEST"
+	ExMode = "TEST"
 )
 
 func SetupLogger() {
-	log_file_path, _ := filepath.Abs(fmt.Sprintf("log/libra_log"))
-	logger.SetupLogger(log_file_path, 4, 5)
+	logFilePath, _ := filepath.Abs(fmt.Sprintf("log/libra_log"))
+	logger.SetupLogger(logFilePath, 4, 5)
 }
 
 func GetDatabaseInstance() *sql.DB {
-	return db_conn
+	return dbConn
 }
 
 func MailMessage() string {
@@ -45,21 +45,21 @@ func main() {
 	service.SetDatabaseInformation("localhost", "3306", "mysql", "root", "Siera_001_DB", "libra")
 	//service.SetDatabaseInformation("localhost", "3306", "mysql", "root", "pw123", "libra")
 	db := service.GetDatabaseConnection()
-	db_conn = db
+	dbConn = db
 	// db.SetMaxIdleConns(0)
 	// db.SetMaxOpenConns(500)
 	// db.SetConnMaxLifetime(time.Second * 10)
-	db_conn = db
+	dbConn = db
 	setDatabaseReferences(db)
 	defer db.Close()
 	mailer = mail.NewMail("mountainviewcasino@gmail.com", "1234", "Wir heissen Sie herzlich bei Libra wilkommen", "Welcome to libra")
-	if EX_MODE == "DEV" {
-		user_instance := user.CreateUserInstance("Haspi", "1234", " ")
-		user_instance.CreationSetup(GetDatabaseInstance())
-		user_instance.Write(GetDatabaseInstance())
-		user_id := user.GetUserIdByUsername(user_instance.Username, GetDatabaseInstance())
+	if ExMode == "DEV" {
+		userInstance := user.CreateUserInstance("Haspi", "1234", " ")
+		userInstance.CreationSetup(GetDatabaseInstance())
+		userInstance.Write(GetDatabaseInstance())
+		userID := user.GetUserIdByUsername(userInstance.Username, GetDatabaseInstance())
 		portfolio := user.Portfolio{}
-		if portfolio.Write(user_id, GetDatabaseInstance(), START_CAPITAL) == false {
+		if portfolio.Write(userID, GetDatabaseInstance(), DefaultStartCapital) == false {
 			logger.LogMessage("Was not able to create default user", logger.WARNING)
 		} else {
 		}

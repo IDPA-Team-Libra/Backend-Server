@@ -52,10 +52,10 @@ func UpdatePortfolio(portfolio user.Portfolio, totalPrice big.Float, quantity in
 	return portfolio.Update(connection)
 }
 
-func connectPortfolioItemWithPortfolio(portfolio user.Portfolio, item user.PortfolioItem, currentUser user.User, db_connection *sql.Tx) bool {
+func connectPortfolioItemWithPortfolio(portfolio user.Portfolio, item user.PortfolioItem, currentUser user.User, databaseConnection *sql.Tx) bool {
 	portfolioConnection := user.PortfolioToItem{
 		PortfolioID:     portfolio.ID,
 		PortfolioItemID: item.ID,
 	}
-	return portfolioConnection.Write(db_connection)
+	return portfolioConnection.Write(databaseConnection)
 }
