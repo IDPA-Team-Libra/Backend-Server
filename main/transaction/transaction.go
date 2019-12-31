@@ -34,7 +34,7 @@ func (transaction *Transaction) LoadTransactionsByProcessState(userID int64, dat
 	var statement *sql.Stmt
 	var err error
 	if userID <= -1 {
-		statement, err = databaseConnection.Prepare("SELECT id,userid,action,description,amount,value,date,processed FROM transaction WHERE processed = ?")
+		statement, err = databaseConnection.Prepare("SELECT id,userid,action,description,amount,value,date,processed FROM transaction WHERE processed = ? WHERE date = CURDATE()")
 	} else {
 		statement, err = databaseConnection.Prepare("SELECT id,userid,action,description,amount,value,date,processed FROM transaction WHERE userID = ? AND processed = ?")
 	}
