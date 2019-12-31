@@ -83,7 +83,7 @@ func main() {
 		END SPACE FOR ROUTES
 	*/
 	go apiconnection.LoadAllStocks("5")
-	database.StartBatchProcess(GetDatabaseInstance())
+	SetupCronJobs()
 	service.StartHTTPServer()
 }
 
@@ -92,9 +92,24 @@ func setDatabaseReferences(database *sql.DB) {
 }
 
 func SetupCronJobs() {
-	c := cron.New()
-	c.AddFunc("@every 15m", func() {
+	cronJob := cron.New()
+	_, err := cronJob.AddFunc("@every 40m", func() {
 		apiconnection.LoadAllStocks("5")
 	})
-	c.Start()
+	if err != nil {
+		panic(err.Error())
+	}
+	_, err = cronJob.AddFunc("@every 20m", func() {
+		PurgeStockScreen()
+	})
+	if err != nil {
+		panic(err.Error())
+	}
+	_, err = cronJob.AddFunc("@midnight", func() {
+		database.StartBatchProcess(GetDatabaseInstance())
+	})
+	if err != nil {
+		panic(err.Error())
+	}
+	cronJob.Start()
 }
