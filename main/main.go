@@ -91,6 +91,7 @@ func setDatabaseReferences(database *sql.DB) {
 	stock.SetDatabaseConnection(GetDatabaseInstance())
 }
 
+//SetupCronJobs -- creates a cronjob that executes 3 different functions that are run on different times and handle stock-fetching, cache clear and Delayed Transaction exectuion
 func SetupCronJobs() {
 	cronJob := cron.New()
 	_, err := cronJob.AddFunc("@every 40m", func() {

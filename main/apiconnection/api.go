@@ -1,7 +1,10 @@
 package apiconnection
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"sync"
 	"time"
 
@@ -73,8 +76,42 @@ func LoadAllStocks(timeInterval string) {
 func LoadAndStoreStock(stocking stock.Stock) {
 	defer wg.Done()
 	stock, success := GetStockDataForSymbol(stocking, stock.ConvertTimeSeries(stocking.TimeData))
-	fmt.Println(stock)
 	if success {
+		stock.Company = GetCompanyNameForSymbol(stocking.Symbol)
 		stock.Store()
 	}
+}
+
+type YahooReponse struct {
+	ResultSet struct {
+		Query  string `json:"Query"`
+		Result []struct {
+			Symbol   string `json:"symbol"`
+			Name     string `json:"name"`
+			Exch     string `json:"exch"`
+			Type     string `json:"type"`
+			ExchDisp string `json:"exchDisp"`
+			TypeDisp string `json:"typeDisp"`
+		} `json:"Result"`
+	} `json:"ResultSet"`
+}
+
+func GetCompanyNameForSymbol(symbol string) string {
+	url := fmt.Sprintf("http://d.yimg.com/autoc.finance.yahoo.com/autoc?query=%s&region=1&lang=en", symbol)
+	resp, err := http.Get(url)
+	if err != nil {
+		return "-"
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "-"
+	}
+	var yahooResponse YahooReponse
+	err = json.Unmarshal(body, &yahooResponse)
+	if err != nil {
+		fmt.Println(err.Error())
+		return "-"
+	}
+	return yahooResponse.ResultSet.Result[0].Name
 }
