@@ -83,6 +83,10 @@ func GetUserTransaction(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonObject)
 }
 
+type DelayedTrasactionResponse struct {
+	Transactions string `json:"transactions"`
+}
+
 func GetDelayedTransactionsByUser(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -117,6 +121,10 @@ func GetDelayedTransactionsByUser(w http.ResponseWriter, r *http.Request) {
 	trans := transaction.Transaction{}
 	transactions := trans.LoadTransactionsByProcessState(userID, GetDatabaseInstance(), false)
 	jsonObject, err := json.Marshal(transactions)
+	transactionResponse := DelayedTrasactionResponse{
+		Transactions: string(jsonObject),
+	}
+	jsonObject, err = json.Marshal(transactionResponse)
 	if err != nil {
 		fmt.Println(err.Error())
 		logger.LogMessage(fmt.Sprintf("Das Request Format in einer Anfrage an GetUserTransaction wurde nicht eingehalten | User: %s", currentUser.Username), logger.WARNING)

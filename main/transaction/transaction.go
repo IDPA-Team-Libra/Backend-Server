@@ -34,7 +34,7 @@ func (transaction *Transaction) LoadTransactionsByProcessState(userID int64, dat
 	var statement *sql.Stmt
 	var err error
 	if userID <= -1 {
-		statement, err = databaseConnection.Prepare("SELECT id,userid,action,description,amount,value,date,processed FROM transaction WHERE processed = ? WHERE date = CURDATE()")
+		statement, err = databaseConnection.Prepare("SELECT id,userid,action,description,amount,value,date,processed FROM transaction WHERE processed = ? AND date = CURDATE()")
 	} else {
 		statement, err = databaseConnection.Prepare("SELECT id,userid,action,description,amount,value,date,processed FROM transaction WHERE userID = ? AND processed = ?")
 	}
@@ -73,7 +73,6 @@ func (transaction *Transaction) Write(processed bool, connection *sql.Tx) bool {
 		fmt.Println(err.Error())
 		return false
 	}
-	fmt.Println(transaction.UserID)
 	if processed == true {
 		_, err = statement.Exec(transaction.UserID, transaction.Action, transaction.Description, transaction.Amount, transaction.Value)
 	} else {
