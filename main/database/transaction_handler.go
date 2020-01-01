@@ -14,6 +14,9 @@ func CreateTransaction(transaction transaction.Transaction, portfolio user.Portf
 	if err != nil {
 		return false
 	}
+	if transaction.Amount <= 0 {
+		return false
+	}
 	if transaction.Write(true, handler) == false {
 		handler.Rollback()
 		return false

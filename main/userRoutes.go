@@ -110,7 +110,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	userInstance := user.CreateUserInstance(currentUser.Username, currentUser.Password, currentUser.Email)
 	uniqueUsername := userInstance.IsUniqueUsername(GetDatabaseInstance())
 	if uniqueUsername == true {
-		success, errorMessage := userInstance.CreationSetup(GetDatabaseInstance())
+		success, errorMessage := userInstance.CreationSetup(GetDatabaseInstance(), false)
 		if success == false {
 			logger.LogMessage(errorMessage, logger.WARNING)
 			w.Write([]byte(errorMessage))

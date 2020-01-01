@@ -18,7 +18,7 @@ import (
 var dbConn *sql.DB
 
 const (
-	ExMode = "TEST"
+	ExMode = "DEV"
 )
 
 func SetupLogger() {
@@ -54,7 +54,7 @@ func main() {
 	mailer = mail.NewMail("mountainviewcasino@gmail.com", "1234", "Wir heissen Sie herzlich bei Libra wilkommen", "Welcome to libra")
 	if ExMode == "DEV" {
 		userInstance := user.CreateUserInstance("Haspi", "1234", " ")
-		userInstance.CreationSetup(GetDatabaseInstance())
+		userInstance.CreationSetup(GetDatabaseInstance(), true)
 		userInstance.Write(GetDatabaseInstance())
 		userID := user.GetUserIdByUsername(userInstance.Username, GetDatabaseInstance())
 		portfolio := user.Portfolio{}
