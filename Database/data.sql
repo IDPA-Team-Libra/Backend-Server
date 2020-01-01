@@ -230,4 +230,5 @@ VALUES
     ('WPZ', 'State Street Corporation', '5', NOW()),
     ('SDRL', 'BB&T Corporation', '5', NOW()),
     ('HES', 'WellPoint Inc.', '5', NOW()),
-    ('NFLX', 'Netflix', '5', NOW()));
+    ('NFLX', 'Netflix', '5', NOW())
+);
