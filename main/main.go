@@ -37,8 +37,6 @@ func main() {
 	defer logger.SyncLogger()
 	logger.LogMessage("Server has started on 3440", logger.INFO)
 	service.ActivateHTTPServer()
-	//service.SetDatabaseInformation("localhost", "3306", "mysql", "root", "Siera_001_DB", "libra")
-	service.SetDatabaseInformation("localhost", "3306", "mysql", "root", "pw123", "libra")
 	service.SetDatabaseInformation("localhost", "3306", "mysql", "administrator", "LOCAL1234", "libra")
 	db := service.GetDatabaseConnection()
 	dbConn = db
@@ -67,8 +65,6 @@ func main() {
 	/*
 		END SPACE FOR ROUTES
 	*/
-	//go apiconnection.LoadAllStocks("5")
-	database.StartBatchProcess(GetDatabaseInstance())
 	go apiconnection.LoadAllStocks("5")
 	SetupCronJobs()
 	service.StartHTTPServer()
