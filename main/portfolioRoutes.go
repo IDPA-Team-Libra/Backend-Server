@@ -44,16 +44,16 @@ func GetPortfolio(w http.ResponseWriter, r *http.Request) {
 		w.Write(resp)
 		return
 	}
-	user_instance := user.CreateUserInstance(currentUser.Username, currentUser.Password, "")
-	user_instance.ID = user.GetUserIdByUsername(user_instance.Username, GetDatabaseInstance())
+	userInstance := user.CreateUserInstance(currentUser.Username, currentUser.Password, "")
+	userInstance.ID = user.GetUserIdByUsername(userInstance.Username, GetDatabaseInstance())
 	trans := transaction.Transaction{}
-	transactions := trans.LoadTransactionsByProcessState(user_instance.ID, GetDatabaseInstance(), true)
+	transactions := trans.LoadTransactionsByProcessState(userInstance.ID, GetDatabaseInstance(), true)
 	response := PortfolioContent{}
 	response.Message = "Success"
-	item_data, _ := json.Marshal(user.LoadUserItems(user_instance.ID, "*", GetDatabaseInstance()))
-	transaction_data, _ := json.Marshal(transactions)
-	response.Items = string(item_data)
-	response.Transactions = string(transaction_data)
+	itemData, _ := json.Marshal(user.LoadUserItems(userInstance.ID, "*", GetDatabaseInstance()))
+	transactionData, _ := json.Marshal(transactions)
+	response.Items = string(itemData)
+	response.Transactions = string(transactionData)
 	resp, err := json.Marshal(response)
 	if err != nil {
 		logger.LogMessage(err.Error(), logger.WARNING)

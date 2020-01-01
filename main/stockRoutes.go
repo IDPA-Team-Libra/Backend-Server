@@ -10,32 +10,36 @@ import (
 	"github.com/Liberatys/libra-back/main/stock"
 )
 
-var stock_data []stock.Stock
-var stock_string []byte
+var stockData []stock.Stock
+var serializedStockItems []byte
 
 type StockHolderstruct struct {
 	Stocks []stock.Stock `json:"stocks"`
 }
 
+func PurgeStockScreen() {
+	stockData = nil
+}
+
 func GetStocks(w http.ResponseWriter, r *http.Request) {
-	if len(stock_data) > 0 {
-		w.Write(stock_string)
+	if len(stockData) > 0 && stockData != nil {
+		w.Write(serializedStockItems)
 		return
 	}
 	stocks := stock.LoadStocksForRoute("5")
 	for key := range stocks {
 		stocks[key].Load()
 	}
-	stock_dat := StockHolderstruct{
+	stockHolderInstance := StockHolderstruct{
 		stocks,
 	}
-	data, err := json.Marshal(stock_dat)
+	data, err := json.Marshal(stockHolderInstance)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	stock_string = data
-	stock_data = stocks
-	w.Write(stock_string)
+	serializedStockItems = data
+	stockData = stocks
+	w.Write(serializedStockItems)
 }
 
 func compress(source string) []byte {

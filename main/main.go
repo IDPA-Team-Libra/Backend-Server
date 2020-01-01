@@ -15,19 +15,19 @@ import (
 	"github.com/robfig/cron"
 )
 
-var db_conn *sql.DB
+var dbConn *sql.DB
 
 const (
-	EX_MODE = "TEST"
+	ExMode = "DEV"
 )
 
 func SetupLogger() {
-	log_file_path, _ := filepath.Abs(fmt.Sprintf("log/libra_log"))
-	logger.SetupLogger(log_file_path, 4, 5)
+	logFilePath, _ := filepath.Abs(fmt.Sprintf("log/libra_log"))
+	logger.SetupLogger(logFilePath, 4, 5)
 }
 
 func GetDatabaseInstance() *sql.DB {
-	return db_conn
+	return dbConn
 }
 
 func MailMessage() string {
@@ -44,22 +44,23 @@ func main() {
 	service.ActivateHTTPServer()
 	//service.SetDatabaseInformation("localhost", "3306", "mysql", "root", "Siera_001_DB", "libra")
 	service.SetDatabaseInformation("localhost", "3306", "mysql", "root", "pw123", "libra")
+	service.SetDatabaseInformation("localhost", "3306", "mysql", "administrator", "LOCAL1234", "libra")
 	db := service.GetDatabaseConnection()
-	db_conn = db
+	dbConn = db
 	// db.SetMaxIdleConns(0)
 	// db.SetMaxOpenConns(500)
 	// db.SetConnMaxLifetime(time.Second * 10)
-	db_conn = db
+	dbConn = db
 	setDatabaseReferences(db)
 	defer db.Close()
 	mailer = mail.NewMail("mountainviewcasino@gmail.com", "1234", "Wir heissen Sie herzlich bei Libra wilkommen", "Welcome to libra")
-	if EX_MODE == "DEV" {
-		user_instance := user.CreateUserInstance("Haspi", "1234", " ")
-		user_instance.CreationSetup(GetDatabaseInstance())
-		user_instance.Write(GetDatabaseInstance())
-		user_id := user.GetUserIdByUsername(user_instance.Username, GetDatabaseInstance())
+	if ExMode == "DEV" {
+		userInstance := user.CreateUserInstance("Haspi", "1234", " ")
+		userInstance.CreationSetup(GetDatabaseInstance(), true)
+		userInstance.Write(GetDatabaseInstance())
+		userID := user.GetUserIdByUsername(userInstance.Username, GetDatabaseInstance())
 		portfolio := user.Portfolio{}
-		if portfolio.Write(user_id, GetDatabaseInstance(), START_CAPITAL) == false {
+		if portfolio.Write(userID, GetDatabaseInstance(), DefaultStartCapital) == false {
 			logger.LogMessage("Was not able to create default user", logger.WARNING)
 		} else {
 		}
@@ -84,6 +85,8 @@ func main() {
 	*/
 	//go apiconnection.LoadAllStocks("5")
 	database.StartBatchProcess(GetDatabaseInstance())
+	go apiconnection.LoadAllStocks("5")
+	SetupCronJobs()
 	service.StartHTTPServer()
 }
 
@@ -91,10 +94,26 @@ func setDatabaseReferences(database *sql.DB) {
 	stock.SetDatabaseConnection(GetDatabaseInstance())
 }
 
+//SetupCronJobs -- creates a cronjob that executes 3 different functions that are run on different times and handle stock-fetching, cache clear and Delayed Transaction exectuion
 func SetupCronJobs() {
-	c := cron.New()
-	c.AddFunc("@every 15m", func() {
+	cronJob := cron.New()
+	_, err := cronJob.AddFunc("@every 40m", func() {
 		apiconnection.LoadAllStocks("5")
 	})
-	c.Start()
+	if err != nil {
+		panic(err.Error())
+	}
+	_, err = cronJob.AddFunc("@every 20m", func() {
+		PurgeStockScreen()
+	})
+	if err != nil {
+		panic(err.Error())
+	}
+	_, err = cronJob.AddFunc("@midnight", func() {
+		database.StartBatchProcess(GetDatabaseInstance())
+	})
+	if err != nil {
+		panic(err.Error())
+	}
+	cronJob.Start()
 }

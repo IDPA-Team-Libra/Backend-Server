@@ -29,14 +29,14 @@ func NewTransaction(UserID int64, Action string, Description string, Amount int6
 }
 
 //TODO: CHECK IF THIS FUNCTION CAN BE EXPLOITED / WORKS OKAY ?
-func (transaction *Transaction) LoadTransactionsByProcessState(userID int64, db_conn *sql.DB, processed bool) []Transaction {
+func (transaction *Transaction) LoadTransactionsByProcessState(userID int64, databaseConnection *sql.DB, processed bool) []Transaction {
 	var transactions []Transaction
 	var statement *sql.Stmt
 	var err error
 	if userID <= -1 {
-		statement, err = db_conn.Prepare("SELECT id,userid,action,description,amount,value,date,processed FROM transaction WHERE processed = ?")
+		statement, err = databaseConnection.Prepare("SELECT id,userid,action,description,amount,value,date,processed FROM transaction WHERE processed = ? AND date = CURDATE()")
 	} else {
-		statement, err = db_conn.Prepare("SELECT id,userid,action,description,amount,value,date,processed FROM transaction WHERE userID = ? AND processed = ?")
+		statement, err = databaseConnection.Prepare("SELECT id,userid,action,description,amount,value,date,processed FROM transaction WHERE userID = ? AND processed = ?")
 	}
 	defer statement.Close()
 	if err != nil {
@@ -73,7 +73,6 @@ func (transaction *Transaction) Write(processed bool, connection *sql.Tx) bool {
 		fmt.Println(err.Error())
 		return false
 	}
-	fmt.Println(transaction.UserID)
 	if processed == true {
 		_, err = statement.Exec(transaction.UserID, transaction.Action, transaction.Description, transaction.Amount, transaction.Value)
 	} else {
@@ -87,8 +86,8 @@ func (transaction *Transaction) Write(processed bool, connection *sql.Tx) bool {
 	return true
 }
 
-func (transaction *Transaction) Remove(sql_conn *sql.DB) bool {
-	statement, err := sql_conn.Prepare("DELETE FROM transaction WHERE id = ?")
+func (transaction *Transaction) Remove(databaseConnection *sql.DB) bool {
+	statement, err := databaseConnection.Prepare("DELETE FROM transaction WHERE id = ?")
 	defer statement.Close()
 	if err != nil {
 		fmt.Println(err.Error())

@@ -7,7 +7,6 @@ import (
 type Validator struct {
 	tokenString string
 	username    string
-	secret_key  string
 }
 
 type Claims struct {

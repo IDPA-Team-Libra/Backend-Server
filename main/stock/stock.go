@@ -62,12 +62,12 @@ func (stock *Stock) Load() bool {
 func (stock *Stock) Store() bool {
 	databaseConnection := database
 	if stock.IsPresent() {
-		statement, err := databaseConnection.Prepare("UPDATE stock SET data = ?,price = ? WHERE id = ? AND timeData = ?")
+		statement, err := databaseConnection.Prepare("UPDATE stock SET data = ?,price = ?,company = ? WHERE id = ? AND timeData = ?")
 		if err != nil {
 			fmt.Println(err.Error())
 			return false
 		}
-		_, err = statement.Exec(stock.Data, stock.Price, stock.ID, stock.TimeData)
+		_, err = statement.Exec(stock.Data, stock.Price, stock.Company, stock.ID, stock.TimeData)
 		if err != nil {
 			return false
 		}

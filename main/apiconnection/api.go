@@ -1,7 +1,10 @@
 package apiconnection
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"sync"
 	"time"
 
@@ -44,37 +47,70 @@ func GetStockDataForSymbol(recovered_stock stock.Stock, interval av.TimeInterval
 //	return recovered_stock, true
 //}
 
-var wg sync.WaitGroup
-var current_wait_group int64
-var max_routines int64
-
 func LoadAllStocks(timeInterval string) {
-	max_routines = 4
-	var current_wait_group int64
+	var wg sync.WaitGroup
+	var currentWaitGroup int64
+	var maxRoutines int64
+	//because the free version of alpha-vantage, has a limitation, also limit the concrrent routines fetching stocks
+	maxRoutines = 5
 	var stocks []stock.Stock
 	stocks = stock.LoadAllStockSymbols(timeInterval)
 	logger.LogMessage("Starting to fetch stocks", logger.INFO)
-	for _, value := range stocks {
+	for index := range stocks {
 		wg.Add(1)
-		current_wait_group += 1
-		LoadAndStoreStock(value)
-		if current_wait_group >= max_routines {
-			current_wait_group = 0
+		currentWaitGroup++
+		LoadAndStoreStock(stocks[index], &wg)
+		if currentWaitGroup >= maxRoutines {
+			currentWaitGroup = 0
 			time.Sleep(1 * time.Minute)
 			wg.Wait()
-			fmt.Println("Sleep")
 		}
 	}
-	current_wait_group = 0
 	wg.Wait()
+	currentWaitGroup = 0
 	logger.LogMessage("Finished loading stocks", logger.INFO)
 }
 
-func LoadAndStoreStock(stocking stock.Stock) {
+func LoadAndStoreStock(stocking stock.Stock, wg *sync.WaitGroup) {
 	defer wg.Done()
 	stock, success := GetStockDataForSymbol(stocking, stock.ConvertTimeSeries(stocking.TimeData))
-	fmt.Println(stock)
 	if success {
+		logger.LogMessage(fmt.Sprintf("Stock %s was loaded", stock.Symbol), logger.INFO)
+		stock.Company = GetCompanyNameForSymbol(stocking.Symbol)
 		stock.Store()
 	}
+}
+
+type YahooReponse struct {
+	ResultSet struct {
+		Query  string `json:"Query"`
+		Result []struct {
+			Symbol   string `json:"symbol"`
+			Name     string `json:"name"`
+			Exch     string `json:"exch"`
+			Type     string `json:"type"`
+			ExchDisp string `json:"exchDisp"`
+			TypeDisp string `json:"typeDisp"`
+		} `json:"Result"`
+	} `json:"ResultSet"`
+}
+
+func GetCompanyNameForSymbol(symbol string) string {
+	url := fmt.Sprintf("http://d.yimg.com/autoc.finance.yahoo.com/autoc?query=%s&region=1&lang=en", symbol)
+	resp, err := http.Get(url)
+	if err != nil {
+		return "-"
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "-"
+	}
+	var yahooResponse YahooReponse
+	err = json.Unmarshal(body, &yahooResponse)
+	if err != nil {
+		fmt.Println(err.Error())
+		return "-"
+	}
+	return yahooResponse.ResultSet.Result[0].Name
 }
