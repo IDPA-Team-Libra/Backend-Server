@@ -11,19 +11,14 @@ import (
 	"github.com/Liberatys/libra-back/main/logger"
 	"github.com/Liberatys/libra-back/main/mail"
 	"github.com/Liberatys/libra-back/main/stock"
-	"github.com/Liberatys/libra-back/main/user"
 	"github.com/robfig/cron"
 )
 
 var dbConn *sql.DB
 
-const (
-	ExMode = "DEV"
-)
-
 func SetupLogger() {
 	logFilePath, _ := filepath.Abs(fmt.Sprintf("log/libra_log"))
-	logger.SetupLogger(logFilePath, 4, 5)
+	logger.SetupLogger(logFilePath)
 }
 
 func GetDatabaseInstance() *sql.DB {
@@ -52,17 +47,6 @@ func main() {
 	setDatabaseReferences(db)
 	defer db.Close()
 	mailer = mail.NewMail("mountainviewcasino@gmail.com", "1234", "Wir heissen Sie herzlich bei Libra wilkommen", "Welcome to libra")
-	if ExMode == "DEV" {
-		userInstance := user.CreateUserInstance("Haspi", "1234", " ")
-		userInstance.CreationSetup(GetDatabaseInstance(), true)
-		userInstance.Write(GetDatabaseInstance())
-		userID := user.GetUserIdByUsername(userInstance.Username, GetDatabaseInstance())
-		portfolio := user.Portfolio{}
-		if portfolio.Write(userID, GetDatabaseInstance(), DefaultStartCapital) == false {
-			logger.LogMessage("Was not able to create default user", logger.WARNING)
-		} else {
-		}
-	}
 	/*
 		SPACE FOR ROUTES
 	*/

@@ -50,8 +50,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userInstance := user.CreateUserInstance(currentUser.Username, currentUser.Password, "")
-	userInstance.ID = user.GetUserIdByUsername(userInstance.Username, GetDatabaseInstance())
-	success, message := userInstance.Authenticate(GetDatabaseInstance())
+	_, value := userInstance.GetPasswordHashByUsername(GetDatabaseInstance())
+	userInstance.ID = user.GetUserIDByUsername(userInstance.Username, GetDatabaseInstance())
+	success, message := userInstance.Authenticate(GetDatabaseInstance(), value)
+	fmt.Println(success)
 	response := sec.Response{}
 	if success == true {
 		response = GenerateTokenForUser(currentUser.Username)
@@ -65,7 +67,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 	response.Message = message
 	currentUser.Password = ""
-	portfolioInstance := user.LoadPortfolio(currentUser.Username, GetDatabaseInstance())
+	portfolioInstance := user.LoadPortfolio(userInstance.ID, GetDatabaseInstance())
 	currentUser.Portfolio = ConvertPortfolioToSerialized(portfolioInstance)
 	userData, _ := json.Marshal(currentUser)
 	response.UserData = string(userData)
@@ -108,22 +110,11 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userInstance := user.CreateUserInstance(currentUser.Username, currentUser.Password, currentUser.Email)
-	uniqueUsername := userInstance.IsUniqueUsername(GetDatabaseInstance())
-	if uniqueUsername == true {
-		success, errorMessage := userInstance.CreationSetup(GetDatabaseInstance(), false)
-		if success == false {
-			logger.LogMessage(errorMessage, logger.WARNING)
-			w.Write([]byte(errorMessage))
-			return
-		}
-		if userInstance.Write(GetDatabaseInstance()) == false {
-			logger.LogMessage(fmt.Sprintf("Ungültige Daten in der Nutzer erstellung | Daten %s|%s", currentUser.Username, currentUser.Email), logger.WARNING)
-			w.Write([]byte("Benutzer konnte nicht erstellt werden. Bitte an Kundendienst wenden"))
-			return
-		}
+	valid, message := userInstance.Create(GetDatabaseInstance())
+	if valid == true {
 		response := GenerateTokenForUser(currentUser.Username)
 		response.Message = "Success"
-		userID := user.GetUserIdByUsername(userInstance.Username, GetDatabaseInstance())
+		userID := user.GetUserIDByUsername(userInstance.Username, GetDatabaseInstance())
 		portfolio := user.Portfolio{}
 		var accountStartBalance float64
 		// if no value is set for the start balance, just take 100000 as a fall backnumber
@@ -143,7 +134,10 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Write(resp)
 	} else {
-		responseObject, _ := json.Marshal("Benutzername bereits vergeben")
+		response := sec.Response{
+			Message: message,
+		}
+		responseObject, _ := json.Marshal(response)
 		w.Write(responseObject)
 	}
 }
@@ -160,7 +154,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Invalid json"))
 		return
 	}
-	validator := sec.NewValidator(currentUser.AccessToken, currentUser.Username)
+	validator := sec.NewTokenValidator(currentUser.AccessToken, currentUser.Username)
 	response := PortfolioContent{}
 	if validator.IsValidToken(jwtKey) == false {
 		response.Message = "Invalid Token"
@@ -189,7 +183,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Invalid json"))
 		return
 	}
-	validator := sec.NewValidator(currentUser.AccessToken, currentUser.Username)
+	validator := sec.NewTokenValidator(currentUser.AccessToken, currentUser.Username)
 	response := sec.Response{}
 	if validator.IsValidToken(jwtKey) == false {
 		response.Message = "Invalid Token"
@@ -228,7 +222,7 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 		Username: request.Username,
 		Password: request.NewPassword,
 	}
-	validator := sec.NewValidator(request.AuthToken, request.Username)
+	validator := sec.NewTokenValidator(request.AuthToken, request.Username)
 	if validator.IsValidToken(jwtKey) == false {
 		obj, _ := json.Marshal("Not able to authenticate user")
 		w.Write([]byte(obj))
@@ -247,9 +241,9 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 }
 
 func changePassword(username string, newPassword string) bool {
-	passwordValidator := user.NewPasswordValidator(newPassword)
+	passwordValidator := user.NewPasswordValidator(newPassword, "")
 	passwordHash := passwordValidator.HashPassword()
-	userID := user.GetUserIdByUsername(username, GetDatabaseInstance())
-	success := user.OverwritePasswordForUserId(userID, passwordHash, GetDatabaseInstance())
+	userID := user.GetUserIDByUsername(username, GetDatabaseInstance())
+	success := user.OverwritePasswordForUserID(userID, passwordHash, GetDatabaseInstance())
 	return success
 }

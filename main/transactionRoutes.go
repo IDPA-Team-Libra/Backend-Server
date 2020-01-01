@@ -53,7 +53,7 @@ func GetUserTransaction(w http.ResponseWriter, r *http.Request) {
 	currentUser := user.User{
 		Username: request.Username,
 	}
-	validator := sec.NewValidator(request.AuthToken, currentUser.Username)
+	validator := sec.NewTokenValidator(request.AuthToken, currentUser.Username)
 	if validator.IsValidToken(jwtKey) == false {
 		logger.LogMessage(fmt.Sprintf("Anfrage an GetUserTransaction hatte einen ungültigen jwt. | User: %s", currentUser.Username), logger.WARNING)
 		response := PortfolioContent{}
@@ -65,16 +65,15 @@ func GetUserTransaction(w http.ResponseWriter, r *http.Request) {
 		w.Write(resp)
 		return
 	}
-	//TODO do something
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	userID := user.GetUserIdByUsername(request.Username, GetDatabaseInstance())
+	userID := user.GetUserIDByUsername(request.Username, GetDatabaseInstance())
 	trans := transaction.Transaction{}
 	transactions := trans.LoadTransactionsByProcessState(userID, GetDatabaseInstance(), true)
 	jsonObject, err := json.Marshal(transactions)
+	fmt.Println(transactions)
 	if err != nil {
-		fmt.Println(err.Error())
 		logger.LogMessage(fmt.Sprintf("Das Request Format in einer Anfrage an GetUserTransaction wurde nicht eingehalten | User: %s", currentUser.Username), logger.WARNING)
 		obj, _ := json.Marshal("Invalid request format")
 		w.Write(obj)
@@ -102,7 +101,7 @@ func GetDelayedTransactionsByUser(w http.ResponseWriter, r *http.Request) {
 	currentUser := user.User{
 		Username: request.Username,
 	}
-	validator := sec.NewValidator(request.AuthToken, currentUser.Username)
+	validator := sec.NewTokenValidator(request.AuthToken, currentUser.Username)
 	if validator.IsValidToken(jwtKey) == false {
 		logger.LogMessage(fmt.Sprintf("Anfrage an GetUserTransaction hatte einen ungültigen jwt. | User: %s", currentUser.Username), logger.WARNING)
 		response := PortfolioContent{}
@@ -117,7 +116,7 @@ func GetDelayedTransactionsByUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	userID := user.GetUserIdByUsername(request.Username, GetDatabaseInstance())
+	userID := user.GetUserIDByUsername(request.Username, GetDatabaseInstance())
 	trans := transaction.Transaction{}
 	transactions := trans.LoadTransactionsByProcessState(userID, GetDatabaseInstance(), false)
 	jsonObject, err := json.Marshal(transactions)
@@ -152,7 +151,7 @@ func RemoveTransaction(w http.ResponseWriter, r *http.Request) {
 	currentUser := user.User{
 		Username: request.Username,
 	}
-	validator := sec.NewValidator(request.AuthToken, request.Username)
+	validator := sec.NewTokenValidator(request.AuthToken, request.Username)
 	if validator.IsValidToken(jwtKey) == false {
 		logger.LogMessageWithOrigin(fmt.Sprintf("User: %s was not able to be authenticated", currentUser.Username), logger.WARNING, "transactionRoutes.go")
 		response := TransactionResponse{
@@ -166,7 +165,7 @@ func RemoveTransaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userInstance := user.CreateUserInstance(currentUser.Username, currentUser.Password, "")
-	userInstance.ID = user.GetUserIdByUsername(request.Username, GetDatabaseInstance())
+	userInstance.ID = user.GetUserIDByUsername(request.Username, GetDatabaseInstance())
 	requestedStock := stock.LoadStockInstance(request.StockSymbol)
 	items := user.LoadUserItems(userInstance.ID, request.StockSymbol, GetDatabaseInstance())
 	totalStockQuantity := database.CalculateTotalStocks(items)
@@ -184,21 +183,22 @@ func RemoveTransaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	handler, err := GetDatabaseInstance().Begin()
-	items = database.SubtractStocksFromTotalAmount(items, requestCount, handler)
-	//TODO do something
+	changedItems := database.SubtractStocksFromTotalAmount(items, requestCount)
+	database.UpdateOrDeleteStocks(changedItems, handler)
 	if err != nil {
 		obj, _ := json.Marshal("Invalid request format")
 		w.Write(obj)
 		return
 	}
-	transaction := transaction.NewTransaction(userInstance.ID, request.Operation, request.Operation+" "+request.StockSymbol, request.Amount, requestedStock.Price, request.Date)
+	transaction := transaction.NewTransaction(userInstance.ID, request.Operation, request.StockSymbol, request.Amount, requestedStock.Price, request.Date)
 	if transaction.Write(true, handler) == false {
 		handler.Rollback()
 		obj, _ := json.Marshal("Invalid request format")
 		w.Write(obj)
 		return
 	}
-	portfolio := user.LoadPortfolio(request.Username, GetDatabaseInstance())
+	userID := user.GetUserIDByUsername(currentUser.Username, GetDatabaseInstance())
+	portfolio := user.LoadPortfolio(userID, GetDatabaseInstance())
 	portfolio.TotalStocks -= request.Amount
 	s := fmt.Sprintf("%f", float64(request.Amount))
 	additionalBalance := database.MultiplyString(s, requestedStock.Price)
@@ -247,13 +247,13 @@ func AddTransaction(w http.ResponseWriter, r *http.Request) {
 	currentUser := user.User{
 		Username: request.Username,
 	}
-	userID := user.GetUserIdByUsername(request.Username, GetDatabaseInstance())
+	userID := user.GetUserIDByUsername(request.Username, GetDatabaseInstance())
 	currentUser.ID = userID
 	if userID <= 0 {
 		fmt.Println("Invalud userID")
 		return
 	}
-	validator := sec.NewValidator(request.AuthToken, request.Username)
+	validator := sec.NewTokenValidator(request.AuthToken, request.Username)
 	if validator.IsValidToken(jwtKey) == false {
 		logger.LogMessageWithOrigin(fmt.Sprintf("User: %s was not able to be authenticated", currentUser.Username), logger.WARNING, "transactionRoutes.go | AddTransaction")
 		response := TransactionResponse{
@@ -266,7 +266,7 @@ func AddTransaction(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(obj))
 		return
 	}
-	portfolio := user.LoadPortfolio(request.Username, GetDatabaseInstance())
+	portfolio := user.LoadPortfolio(userID, GetDatabaseInstance())
 	totalPrice := new(big.Float)
 	requestedStock := stock.LoadStockInstance(request.StockSymbol)
 	totalPrice, _ = totalPrice.SetString(requestedStock.Price)
@@ -315,13 +315,13 @@ func HandleDelayedTransaction(w http.ResponseWriter, r *http.Request) (bool, tra
 	currentUser := user.User{
 		Username: request.Username,
 	}
-	userID := user.GetUserIdByUsername(request.Username, GetDatabaseInstance())
+	userID := user.GetUserIDByUsername(request.Username, GetDatabaseInstance())
 	currentUser.ID = userID
 	if userID <= 0 {
 		logger.LogMessage(fmt.Sprintf("Eine Nutzer ID war nicht gültig | User %s", request.Username), logger.WARNING)
 		return false, transaction.Transaction{}
 	}
-	validator := sec.NewValidator(request.AuthToken, request.Username)
+	validator := sec.NewTokenValidator(request.AuthToken, request.Username)
 	if validator.IsValidToken(jwtKey) == false {
 		logger.LogMessageWithOrigin(fmt.Sprintf("User: %s was not able to be validated", currentUser.Username), logger.WARNING, "transactionRoutes.go | AddDelayedTransaction")
 		response := TransactionResponse{
@@ -339,7 +339,7 @@ func HandleDelayedTransaction(w http.ResponseWriter, r *http.Request) (bool, tra
 	totalPrice, _ = totalPrice.SetString(requestedStock.Price)
 	amount := float64(request.Amount)
 	totalPrice = totalPrice.Mul(totalPrice, big.NewFloat(amount))
-	transaction := transaction.NewTransaction(userID, request.Operation, request.Operation+" "+request.StockSymbol, request.Amount, request.ExpectedStockPrice, request.Date)
+	transaction := transaction.NewTransaction(userID, request.Operation, request.StockSymbol, request.Amount, request.ExpectedStockPrice, request.Date)
 	return true, transaction
 }
 
@@ -350,7 +350,6 @@ func AddDelayedBuyTransaction(w http.ResponseWriter, r *http.Request) {
 	}
 	handler, err := GetDatabaseInstance().Begin()
 	if err != nil {
-
 	}
 	if transaction.Write(false, handler) == false {
 		response := TransactionResponse{

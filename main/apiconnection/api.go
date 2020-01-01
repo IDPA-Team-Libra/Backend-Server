@@ -76,8 +76,10 @@ func LoadAndStoreStock(stocking stock.Stock, wg *sync.WaitGroup) {
 	stock, success := GetStockDataForSymbol(stocking, stock.ConvertTimeSeries(stocking.TimeData))
 	if success {
 		logger.LogMessage(fmt.Sprintf("Stock %s was loaded", stock.Symbol), logger.INFO)
-		stock.Company = GetCompanyNameForSymbol(stocking.Symbol)
-		stock.Store()
+		if stock.Company == "" {
+			stock.Company = GetCompanyNameForSymbol(stocking.Symbol)
+		}
+		stock.Update()
 	}
 }
 

@@ -4,27 +4,31 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-type Validator struct {
-	tokenString string
-	username    string
+//TokenValidator holds information about the receaved token and the Username
+type TokenValidator struct {
+	TokenString string
+	Username    string
 }
 
+//Claims claims to parse for the jwt-library
 type Claims struct {
 	Username string `json:"username"`
 	jwt.StandardClaims
 }
 
-func NewValidator(tokenString, username string) Validator {
-	validator := Validator{
-		tokenString: tokenString,
-		username:    username,
+//NewTokenValidator creates a new Tokenvalidator
+func NewTokenValidator(TokenString, Username string) TokenValidator {
+	TokenValidator := TokenValidator{
+		TokenString: TokenString,
+		Username:    Username,
 	}
-	return validator
+	return TokenValidator
 }
 
-func (validator *Validator) IsValidToken(secret []byte) bool {
+//IsValidToken checks weather at token matches the given secret and contains the username that is given
+func (TokenValidator *TokenValidator) IsValidToken(secret []byte) bool {
 	claims := &Claims{}
-	tkn, err := jwt.ParseWithClaims(validator.tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+	tkn, err := jwt.ParseWithClaims(TokenValidator.TokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return secret, nil
 	})
 	if err != nil {
@@ -36,7 +40,7 @@ func (validator *Validator) IsValidToken(secret []byte) bool {
 	if !tkn.Valid {
 		return false
 	}
-	if claims.Username == validator.username {
+	if claims.Username == TokenValidator.Username {
 		return true
 	}
 	return false

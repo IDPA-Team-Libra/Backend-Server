@@ -32,16 +32,19 @@ func BatchBuyTransactions(transaction transaction.Transaction, conn *sql.DB) boo
 	currentUser := user.User{
 		Username: user.GetUsernameByID(transaction.UserID, conn),
 	}
-	portfolio := user.LoadPortfolio(currentUser.Username, conn)
+	userID := user.GetUserIDByUsername(currentUser.Username, conn)
+	portfolio := user.LoadPortfolio(userID, conn)
 	totalPrice := new(big.Float)
-	requestedStock := stock.LoadStockInstance(ExtractStockNameWithTrim(transaction.Description))
+	requestedStock := stock.LoadStockInstance(ExtractStockNameWithTrim(transaction.Symbol))
 	totalPrice, _ = totalPrice.SetString(requestedStock.Price)
 	amount := float64(transaction.Amount)
 	totalPrice = totalPrice.Mul(totalPrice, big.NewFloat(amount))
 	expectedTransactionValue := new(big.Float)
 	expectedTransactionValue, _ = expectedTransactionValue.SetString(transaction.Value)
+	handler, _ := conn.Begin()
 	// can only execute enough money is around
-	transaction.Remove(conn)
+	transaction.Remove(handler)
+	handler.Commit()
 	if portfolio.Balance.Cmp(totalPrice) == 2 {
 		logger.LogMessage(fmt.Sprintf("Was not able to complete delayed buy for User: %s due to insufficient funds", currentUser.Username), logger.WARNING)
 		return false
@@ -68,14 +71,16 @@ func BatchSellTransactions(transaction transaction.Transaction, conn *sql.DB) bo
 	currentUser := user.User{
 		Username: user.GetUsernameByID(transaction.UserID, conn),
 	}
-	stockSymbol := ExtractStockNameWithTrim(transaction.Description)
+	stockSymbol := ExtractStockNameWithTrim(transaction.Symbol)
 	userInstance := user.CreateUserInstance(currentUser.Username, "", "")
-	userInstance.ID = user.GetUserIdByUsername(currentUser.Username, conn)
+	userInstance.ID = user.GetUserIDByUsername(currentUser.Username, conn)
 	requestedStock := stock.LoadStockInstance(stockSymbol)
 	items := user.LoadUserItems(userInstance.ID, stockSymbol, conn)
 	totalStockQuantity := CalculateTotalStocks(items)
 	requestCount := transaction.Amount
-	transaction.Remove(conn)
+	handler, _ := conn.Begin()
+	transaction.Remove(handler)
+	handler.Commit()
 	if totalStockQuantity < requestCount {
 		logger.LogMessage(fmt.Sprintf("Was not able to execute delayed sell for User: %s", currentUser.Username), logger.WARNING)
 		return false
@@ -86,12 +91,14 @@ func BatchSellTransactions(transaction transaction.Transaction, conn *sql.DB) bo
 		fmt.Println(err.Error())
 		return false
 	}
-	SubtractStocksFromTotalAmount(items, requestCount, handler)
+	changedItems := SubtractStocksFromTotalAmount(items, requestCount)
+	UpdateOrDeleteStocks(changedItems, handler)
 	if transaction.Write(true, handler) == false {
 		handler.Rollback()
 		return false
 	}
-	portfolio := user.LoadPortfolio(currentUser.Username, conn)
+	userID := user.GetUserIDByUsername(currentUser.Username, conn)
+	portfolio := user.LoadPortfolio(userID, conn)
 	portfolio.TotalStocks -= transaction.Amount
 	s := fmt.Sprintf("%f", float64(transaction.Amount))
 	additionalBalance := MultiplyString(s, requestedStock.Price)
@@ -106,6 +113,7 @@ func BatchSellTransactions(transaction transaction.Transaction, conn *sql.DB) bo
 	return true
 }
 
+//MultiplyString multiplies two strings and returns it as *big.Float
 func MultiplyString(first, second string) *big.Float {
 	firstFloat := new(big.Float)
 	firstFloat.SetString(first)
@@ -114,27 +122,48 @@ func MultiplyString(first, second string) *big.Float {
 	secondFloat, _ = secondFloat.SetString(second)
 	return firstFloat.Mul(firstFloat, secondFloat)
 }
-func SubtractStocksFromTotalAmount(items []user.PortfolioItem, requestCount int64, conn *sql.Tx) []user.PortfolioItem {
+
+//SubtractStocksFromTotalAmount subtracts a count from a slice of PortfolioItems
+func SubtractStocksFromTotalAmount(items []user.PortfolioItem, requestCount int64) []user.PortfolioItem {
+	var changedItems []user.PortfolioItem
 	for index := range items {
 		if requestCount > 0 {
 			quantity := items[index].Quantity
 			if quantity <= requestCount {
 				requestCount -= quantity
 				items[index].Quantity = 0
-				items[index].Remove(conn)
+				changedItems = append(changedItems, items[index])
 			} else {
 				items[index].Quantity -= requestCount
 				requestCount = 0
-				items[index].Update(conn)
+				changedItems = append(changedItems, items[index])
 				break
 			}
 		} else {
 			break
 		}
 	}
-	return items
+	return changedItems
 }
 
+//UpdateOrDeleteStocks updates or deletes stocks based on the Quntity value
+func UpdateOrDeleteStocks(items []user.PortfolioItem, conn *sql.Tx) bool {
+	for index := range items {
+		quantity := items[index].Quantity
+		if quantity > 0 {
+			if items[index].Update(conn) == false {
+				return false
+			}
+		} else {
+			if items[index].RemoveItemAndConnection(conn) == false {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+//CalculateTotalStocks calculate the total Quantity for all stocks of a given symbol
 func CalculateTotalStocks(items []user.PortfolioItem) int64 {
 	var counter int64
 	for index := range items {

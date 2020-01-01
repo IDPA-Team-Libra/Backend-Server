@@ -4,6 +4,7 @@ import (
 	"fmt"
 )
 
+//Stock struct holding informaiton about stocks in the database
 type Stock struct {
 	ID       int64  `json:"id"`
 	Company  string `json:"company"`
@@ -13,6 +14,7 @@ type Stock struct {
 	Data     string `json:"data"`
 }
 
+//NewStockEntry creates a new entry with symbol and timedata
 func NewStockEntry(Symbol string, TimeData string) Stock {
 	stock := Stock{
 		Symbol:   Symbol,
@@ -21,27 +23,7 @@ func NewStockEntry(Symbol string, TimeData string) Stock {
 	return stock
 }
 
-func (stock *Stock) IsPresent() bool {
-	databaseConnection := database
-	statement, err := databaseConnection.Prepare("SELECT count(*) FROM stock WHERE symbol = ? AND timeData = ?")
-	defer statement.Close()
-	if err != nil {
-		fmt.Println(err.Error())
-		return false
-	}
-	result, err := statement.Query(stock.Symbol, stock.TimeData)
-	if err != nil {
-	}
-	defer result.Close()
-	var returnedCounter int
-	result.Next()
-	result.Scan(&returnedCounter)
-	if returnedCounter == 0 {
-		return false
-	}
-	return true
-}
-
+//Load retreaves stock information from the database
 func (stock *Stock) Load() bool {
 	databaseConnection := database
 	statement, err := databaseConnection.Prepare("SELECT id,data,price,company FROM stock WHERE symbol = ? AND timedata = ?")
@@ -59,32 +41,22 @@ func (stock *Stock) Load() bool {
 	return true
 }
 
-func (stock *Stock) Store() bool {
+//Update updates the stock values in the database
+func (stock *Stock) Update() bool {
 	databaseConnection := database
-	if stock.IsPresent() {
-		statement, err := databaseConnection.Prepare("UPDATE stock SET data = ?,price = ?,company = ? WHERE id = ? AND timeData = ?")
-		if err != nil {
-			fmt.Println(err.Error())
-			return false
-		}
-		_, err = statement.Exec(stock.Data, stock.Price, stock.Company, stock.ID, stock.TimeData)
-		if err != nil {
-			return false
-		}
-	} else {
-		statement, err := databaseConnection.Prepare("INSERT INTO stock(symbol,company,timeData,data,last_query,price) VALUES(?,?,?,?,Now(),?)")
-		if err != nil {
-			fmt.Println(err.Error())
-			return false
-		}
-		_, err = statement.Exec(stock.Symbol, stock.Company, stock.TimeData, stock.Data, stock.Price)
-		if err != nil {
-			return false
-		}
+	statement, err := databaseConnection.Prepare("UPDATE stock SET data = ?,price = ?,company = ? WHERE id = ? AND timeData = ?")
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	_, err = statement.Exec(stock.Data, stock.Price, stock.Company, stock.ID, stock.TimeData)
+	if err != nil {
+		return false
 	}
 	return true
 }
 
+//GetSymbolByID returns a stock symbol by comparing id and timedata
 func (stock *Stock) GetSymbolByID(id int64) string {
 	databaseConnection := database
 	statement, err := databaseConnection.Prepare("SELECT symbol FROM stock WHERE id = ? AND timedata = ?")
@@ -103,6 +75,7 @@ func (stock *Stock) GetSymbolByID(id int64) string {
 	return stock.Symbol
 }
 
+//LoadStockInstance loads a stock by a given symbol
 func LoadStockInstance(stockSymbol string) Stock {
 	stock := NewStockEntry(stockSymbol, "5")
 	stock.Load()

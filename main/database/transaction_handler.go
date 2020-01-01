@@ -9,6 +9,7 @@ import (
 	"github.com/Liberatys/libra-back/main/user"
 )
 
+//CreateTransaction creates a new transaction and writes all connections and entries to the database
 func CreateTransaction(transaction transaction.Transaction, portfolio user.Portfolio, stockInstance stock.Stock, currentUser user.User, quantity int64, totalPrice big.Float, databaseConnection *sql.DB) bool {
 	handler, err := databaseConnection.Begin()
 	if err != nil {
@@ -17,6 +18,7 @@ func CreateTransaction(transaction transaction.Transaction, portfolio user.Portf
 	if transaction.Amount <= 0 {
 		return false
 	}
+	transaction.Symbol = stockInstance.Symbol
 	if transaction.Write(true, handler) == false {
 		handler.Rollback()
 		return false
@@ -34,7 +36,7 @@ func CreateTransaction(transaction transaction.Transaction, portfolio user.Portf
 		handler.Rollback()
 		return false
 	}
-	if UpdatePortfolio(portfolio, totalBuyPrice, quantity, currentUser, handler) == false {
+	if UpdatePortfolio(portfolio, totalBuyPrice, quantity, handler) == false {
 		handler.Rollback()
 		return false
 	}
@@ -46,12 +48,19 @@ func CreateTransaction(transaction transaction.Transaction, portfolio user.Portf
 	return true
 }
 
-func UpdatePortfolio(portfolio user.Portfolio, totalPrice big.Float, quantity int64, currentUser user.User, connection *sql.Tx) bool {
+//UpdatePortfolioValues updates the values for quantity , balance and Value
+func UpdatePortfolioValues(portfolio user.Portfolio, totalPrice big.Float, quantity int64) user.Portfolio {
 	newBalanceValue := portfolio.Balance.Sub(&portfolio.Balance, &totalPrice)
 	newCurrentValue := portfolio.CurrentValue.Add(&portfolio.CurrentValue, &totalPrice)
 	portfolio.Balance = *newBalanceValue
 	portfolio.CurrentValue = *newCurrentValue
 	portfolio.TotalStocks += quantity
+	return portfolio
+}
+
+//UpdatePortfolio updates values and writes the update to the database
+func UpdatePortfolio(portfolio user.Portfolio, totalPrice big.Float, quantity int64, connection *sql.Tx) bool {
+	portfolio = UpdatePortfolioValues(portfolio, totalPrice, quantity)
 	return portfolio.Update(connection)
 }
 

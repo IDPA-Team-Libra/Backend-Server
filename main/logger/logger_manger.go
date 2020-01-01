@@ -9,7 +9,8 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-func SetupLogger(filePath string, rotationSizeInMB int, numberofBackups int) {
+//SetupLogger creates a logger and sets the ouput file for the log-location
+func SetupLogger(filePath string) {
 	layout := "2006-01-02"
 	date := time.Now().Local()
 	t := date.Format(layout)
@@ -32,6 +33,7 @@ func SetupLogger(filePath string, rotationSizeInMB int, numberofBackups int) {
 	)).Sugar()
 }
 
+//SyncLogger closes logger and flushes all hanging entries
 func SyncLogger() {
 	loggerInstance.Sync()
 }

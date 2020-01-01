@@ -1,45 +1,35 @@
 package user
 
 import (
-	"strings"
-
 	"golang.org/x/crypto/bcrypt"
 )
 
+//PasswordValidatior structure to hold a password and to make operations on
 type PasswordValidatior struct {
-	Password string
+	Password    string
+	PassworHash string
 }
 
-func NewPasswordValidator(password string) PasswordValidatior {
+//NewPasswordValidator creates a new PasswordValidator to work with
+func NewPasswordValidator(password, passwordHash string) PasswordValidatior {
 	return PasswordValidatior{
-		Password: password,
+		Password:    password,
+		PassworHash: passwordHash,
 	}
 }
 
-func (passwordValidator *PasswordValidatior) isValidPassword() bool {
-	if len(passwordValidator.Password) < 7 {
-		return false
-	}
-	if strings.ContainsAny(passwordValidator.Password, "@#$%^&!.-,") == false {
-		return false
-	}
-	if strings.ContainsAny(passwordValidator.Password, "1234567890") == false {
-		return false
-	}
-	return true
-}
-
+//HashPassword hashes a given password with bcrypt
 func (passwordValidator *PasswordValidatior) HashPassword() string {
 	hash, err := bcrypt.GenerateFromPassword([]byte(passwordValidator.Password), 11)
 	if err != nil {
-		//TODO: Log information to a specified logger for the package
 		return ""
 	}
 	return string(hash[:])
 }
 
-func (passwordValidator *PasswordValidatior) comparePasswords(passwordHash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(passwordValidator.Password))
+//ComparePasswords checks if a given password, matches a given password-hash
+func (passwordValidator *PasswordValidatior) ComparePasswords() bool {
+	err := bcrypt.CompareHashAndPassword([]byte(passwordValidator.PassworHash), []byte(passwordValidator.Password))
 	if err != nil {
 		return false
 	}

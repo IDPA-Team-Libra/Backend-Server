@@ -32,7 +32,7 @@ func GetPortfolio(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Invalid json"))
 		return
 	}
-	validator := sec.NewValidator(currentUser.AccessToken, currentUser.Username)
+	validator := sec.NewTokenValidator(currentUser.AccessToken, currentUser.Username)
 	if validator.IsValidToken(jwtKey) == false {
 		logger.LogMessage(fmt.Sprintf("Anfrage an GetUserTransaction hatte einen ungültigen jwt. | User: %s", currentUser.Username), logger.WARNING)
 		response := PortfolioContent{}
@@ -45,7 +45,7 @@ func GetPortfolio(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userInstance := user.CreateUserInstance(currentUser.Username, currentUser.Password, "")
-	userInstance.ID = user.GetUserIdByUsername(userInstance.Username, GetDatabaseInstance())
+	userInstance.ID = user.GetUserIDByUsername(userInstance.Username, GetDatabaseInstance())
 	trans := transaction.Transaction{}
 	transactions := trans.LoadTransactionsByProcessState(userInstance.ID, GetDatabaseInstance(), true)
 	response := PortfolioContent{}
