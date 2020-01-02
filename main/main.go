@@ -36,9 +36,6 @@ func main() {
 	service.SetDatabaseInformation("localhost", "3306", "mysql", "administrator", "LOCAL1234", "libra")
 	db := service.GetDatabaseConnection()
 	dbConn = db
-	// db.SetMaxIdleConns(0)
-	// db.SetMaxOpenConns(500)
-	// db.SetConnMaxLifetime(time.Second * 10)
 	dbConn = db
 	setDatabaseReferences(db)
 	defer db.Close()
