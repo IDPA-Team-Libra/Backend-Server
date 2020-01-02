@@ -13,11 +13,10 @@ import (
 	"github.com/Liberatys/libra-back/main/stock"
 )
 
-const APIKEY1 = "CG96DXD2YPARDLMX"
-const APIKEY2 = ""
+var keyRounds []string
 
-func GetStockDataForSymbol(recovered_stock stock.Stock) (stock.Stock, bool) {
-	client := av.NewClient(APIKEY1)
+func GetStockDataForSymbol(recovered_stock stock.Stock, key string) (stock.Stock, bool) {
+	client := av.NewClient(key)
 	interval, _ := stock.ConvertTimeSeries(recovered_stock.TimeData)
 	result, err := client.StockTimeSeriesIntraday(interval, recovered_stock.Symbol)
 	if err != nil {
@@ -54,9 +53,17 @@ func LoadAllStocks(timeInterval string) {
 	var wg sync.WaitGroup
 	var currentWaitGroup int64
 	var maxRoutines int64
+	keyRounds = []string{
+		"CG96DXD2YPARDLMX",
+		"GJQQ5PRFZSPZSENI",
+		"9PW8B5GO7RHT3XJ5",
+		"7JJ4KU81J5CDN1CU",
+		"6CXB51K9FI74XVK",
+		"PAKC21FC1QJR6YMX",
+	}
 	nameCache = make(map[string]string)
 	//because the free version of alpha-vantage, has a limitation, also limit the concrrent routines fetching stocks
-	maxRoutines = 5
+	maxRoutines = 30
 	var stocks []stock.Stock
 	timeIntervals := []string{
 		"1",
@@ -65,13 +72,21 @@ func LoadAllStocks(timeInterval string) {
 		"30",
 		"60",
 	}
+	var keyIndex int
+	keyIndex = 0
 	for index := range timeIntervals {
 		stocks = stock.LoadAllStockSymbols(timeIntervals[index])
 		logger.LogMessage("Starting to fetch stocks", logger.INFO)
 		for index := range stocks {
 			wg.Add(1)
 			currentWaitGroup++
-			LoadAndStoreStock(stocks[index], &wg)
+			if currentWaitGroup%5 == 0 {
+				keyIndex++
+				if keyIndex == len(keyRounds)-1 {
+					keyIndex = 0
+				}
+			}
+			LoadAndStoreStock(stocks[index], &wg, keyRounds[keyIndex])
 			if currentWaitGroup >= maxRoutines {
 				currentWaitGroup = 0
 				time.Sleep(1 * time.Minute)
@@ -88,9 +103,10 @@ func LoadAllStocks(timeInterval string) {
 
 var nameCache map[string]string
 
-func LoadAndStoreStock(stocking stock.Stock, wg *sync.WaitGroup) {
+func LoadAndStoreStock(stocking stock.Stock, wg *sync.WaitGroup, key string) {
 	defer wg.Done()
-	stock, success := GetStockDataForSymbol(stocking)
+	stock, success := GetStockDataForSymbol(stocking, key)
+	fmt.Println(success)
 	if success {
 		logger.LogMessage(fmt.Sprintf("Stock %s was loaded", stock.Symbol), logger.INFO)
 		if stock.Company == "" {
