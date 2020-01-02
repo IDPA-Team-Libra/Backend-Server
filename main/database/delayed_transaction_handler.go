@@ -18,6 +18,7 @@ type Outcome struct {
 	Sucess    bool
 	Symbol    string
 	Message   string
+	Amount    int64
 }
 
 func StartBatchProcess(databaseConnection *sql.DB) {
@@ -40,6 +41,7 @@ func StartBatchProcess(databaseConnection *sql.DB) {
 					Operation: value.Action,
 					Symbol:    value.Symbol,
 					Message:   message,
+					Amount:    value.Amount,
 				},
 			}
 		} else {
@@ -48,6 +50,7 @@ func StartBatchProcess(databaseConnection *sql.DB) {
 				Operation: value.Action,
 				Symbol:    value.Symbol,
 				Message:   message,
+				Amount:    value.Amount,
 			})
 		}
 	}
@@ -70,9 +73,9 @@ func SendUpdatesPerUser(mapping map[int64][]Outcome, databaseConnection *sql.DB)
 			} else {
 				sucessState = "Fehlgeschlagen"
 			}
-			currentStat := fmt.Sprintf("%s : %s ==> %s", val.Operation, val.Symbol, sucessState)
+			currentStat := fmt.Sprintf("%s : %s => Anzahl: %d ==> %s", val.Operation, val.Symbol, val.Amount, sucessState)
 			if val.Sucess == false {
-				currentStat = fmt.Sprintf("%s | %s", currentStat, val.Message)
+				currentStat = fmt.Sprintf("%s | %s => Anzahl: %d", currentStat, val.Message, val.Amount)
 			}
 			result = append(result, currentStat)
 		}

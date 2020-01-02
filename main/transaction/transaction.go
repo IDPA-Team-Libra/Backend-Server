@@ -2,6 +2,7 @@ package transaction
 
 import (
 	"database/sql"
+	"fmt"
 )
 
 type Transaction struct {
@@ -37,20 +38,21 @@ func (transaction *Transaction) LoadTransactionsByProcessState(userID int64, dat
 	} else {
 		statement, err = databaseConnection.Prepare("SELECT id,userid,action,symbol,amount,value,date,processed FROM transaction WHERE userID = ? AND processed = ?")
 	}
+	defer statement.Close()
 	if err != nil {
+		fmt.Println(err.Error())
 		return transactions
 	}
-	defer statement.Close()
 	var result *sql.Rows
 	if userID <= -1 {
 		result, err = statement.Query(processed)
 	} else {
 		result, err = statement.Query(userID, processed)
 	}
+	defer result.Close()
 	if err != nil {
 		return transactions
 	}
-	defer result.Close()
 	for result.Next() {
 		var trans Transaction
 		result.Scan(&trans.ID, &trans.UserID, &trans.Action, &trans.Symbol, &trans.Amount, &trans.Value, &trans.Date, &trans.Processed)
@@ -71,6 +73,7 @@ func (transaction *Transaction) Write(processed bool, connection *sql.Tx) bool {
 	statement, err := connection.Prepare(insertionSequence)
 	defer statement.Close()
 	if err != nil {
+		fmt.Println(err.Error())
 		return false
 	}
 	if processed == true {
@@ -79,6 +82,7 @@ func (transaction *Transaction) Write(processed bool, connection *sql.Tx) bool {
 		_, err = statement.Exec(transaction.UserID, transaction.Action, transaction.Symbol, transaction.Amount, transaction.Value, transaction.Date)
 	}
 	if err != nil {
+		fmt.Println(err.Error())
 		return false
 	}
 	return true

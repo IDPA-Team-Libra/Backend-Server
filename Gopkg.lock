@@ -10,6 +10,14 @@
   version = "v0.3.1"
 
 [[projects]]
+  digest = "1:c84a587136cb69cecc11f3dbe9f9001444044c0dba74997b07f7e4c150b07cda"
+  name = "github.com/DATA-DOG/go-sqlmock"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "3f9954f6f6697845b082ca57995849ddf614f450"
+  version = "v1.3.3"
+
+[[projects]]
   branch = "master"
   digest = "1:f5a4c7b7bd7b5a49f6b14c5634718b4c6e41d87ae3fce1256ce043951b1ddc22"
   name = "github.com/Liberatys/Sanctuary"
@@ -232,6 +240,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/DATA-DOG/go-sqlmock",
     "github.com/Liberatys/Sanctuary/service",
     "github.com/asaskevich/govalidator",
     "github.com/cmckee-dev/go-alpha-vantage",

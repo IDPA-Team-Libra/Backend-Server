@@ -4,14 +4,13 @@ This is the repository for the libra-backend. Libra is a school project that is 
 You fill found all source-code for the entire backend as well as a suite of integration and unit tests. 
 Included are also setup files for docker.
 
-
-
 **TODO:**
 * Refactor Code
 * Reduce Clutter
 * Rewrite monolithitc functions in smaller sub methods
 * Writing more doc in the form of comments
 
+![gopherbadger-tag-do-not-edit]()
 
 
 The frontend for the application can be found in the IDPA-Team-Libra/Frotend repo.
