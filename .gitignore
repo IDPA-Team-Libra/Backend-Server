@@ -1,3 +1,4 @@
 api.coe
 vendor/
-main/log
+main/log/
+main/log/*
