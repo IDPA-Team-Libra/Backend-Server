@@ -7,6 +7,7 @@ import (
 
 var databaseConnection *sql.DB
 
+//SetDatabaseConnection sets a connection that can be used inside the mail-package
 func SetDatabaseConnection(connection *sql.DB) {
 	databaseConnection = connection
 }
@@ -30,6 +31,7 @@ func RetreaveAllEmailAdresses() []string {
 	return emails
 }
 
-func SendBulkEmail() {
+//SendBulkEmail sends an email to all users in the system
+func SendBulkEmail(message string) {
 
 }

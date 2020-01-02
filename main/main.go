@@ -25,10 +25,6 @@ func GetDatabaseInstance() *sql.DB {
 	return dbConn
 }
 
-func MailMessage() string {
-	return "Wir heissen Sie herzlich bei Libra wilkommen. Libra ist eine Simulierung des wirklichen Aktienmarkets und soll Ihnen helfen Aktien zu kaufen und verkaufen"
-}
-
 func main() {
 	// setup service with a http server
 	service := service.NewService("#001", "login", "A login service that handles login for users", "3440")
@@ -46,7 +42,10 @@ func main() {
 	dbConn = db
 	setDatabaseReferences(db)
 	defer db.Close()
-	mailer = mail.NewMail("mountainviewcasino@gmail.com", "1234", "Wir heissen Sie herzlich bei Libra wilkommen", "Welcome to libra")
+	mail.SetMailConfiguration(mail.MailConfiguration{
+		Sender:    "librastockcompany@gmail.com",
+		GmailPass: "Hc6EGgQ5ANjVwTY",
+	})
 	/*
 		SPACE FOR ROUTES
 	*/

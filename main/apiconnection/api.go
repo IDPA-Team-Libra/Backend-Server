@@ -13,7 +13,6 @@ import (
 	av "github.com/cmckee-dev/go-alpha-vantage"
 )
 
-//TODO hide api_key
 const APIKEY = "CG96DXD2YPARDLMX"
 
 func GetStockDataForSymbol(recovered_stock stock.Stock, interval av.TimeInterval) (stock.Stock, bool) {

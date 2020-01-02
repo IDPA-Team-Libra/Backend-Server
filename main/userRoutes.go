@@ -14,7 +14,6 @@ import (
 )
 
 var jwtKey = []byte("Secret")
-var mailer mail.Mail
 
 type User struct {
 	Username     string              `json:"username"`
@@ -131,7 +130,11 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		resp, err := json.Marshal(response)
 		if err != nil {
 			logger.LogMessage(fmt.Sprintf("Invalid Authentication | User %s", currentUser.Username), logger.WARNING)
+			return
 		}
+		mailer := mail.NewMail(currentUser.Email)
+		mailer.ApplyConfiguration(mail.LoadMailConfiguration())
+		go mailer.SendWelcomeEmail()
 		w.Write(resp)
 	} else {
 		response := sec.Response{
@@ -139,6 +142,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		}
 		responseObject, _ := json.Marshal(response)
 		w.Write(responseObject)
+		return
 	}
 }
 

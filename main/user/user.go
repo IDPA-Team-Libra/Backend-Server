@@ -115,6 +115,23 @@ func (user *User) IsUniqueUser(databaseConnection *sql.DB) (bool, string) {
 	return true, "Nutzerdaten wurden noch nich genutzt"
 }
 
+//GetUserMail load an email address by user-id
+func (user *User) GetUserMail(databaseConnection *sql.DB) string {
+	statement, err := databaseConnection.Prepare("SELECT email FROM User WHERE id = ?")
+	if err != nil {
+	}
+	defer statement.Close()
+	result, err := statement.Query(user.ID)
+	if err != nil {
+	}
+	defer result.Close()
+	var email string
+	if result.Next() {
+		result.Scan(&email)
+	}
+	return email
+}
+
 //Create validates the userdata and writes it to the database if data is valid
 func (user *User) Create(databaseConnection *sql.DB) (bool, string) {
 	valid := user.IsUserDataSet()
