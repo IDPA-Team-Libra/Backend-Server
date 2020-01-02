@@ -8,15 +8,17 @@ import (
 	"sync"
 	"time"
 
+	av "github.com/Liberatys/go-alpha-vantage"
 	"github.com/Liberatys/libra-back/main/logger"
 	"github.com/Liberatys/libra-back/main/stock"
-	av "github.com/cmckee-dev/go-alpha-vantage"
 )
 
-const APIKEY = "CG96DXD2YPARDLMX"
+const APIKEY1 = "CG96DXD2YPARDLMX"
+const APIKEY2 = ""
 
-func GetStockDataForSymbol(recovered_stock stock.Stock, interval av.TimeInterval) (stock.Stock, bool) {
-	client := av.NewClient(APIKEY)
+func GetStockDataForSymbol(recovered_stock stock.Stock) (stock.Stock, bool) {
+	client := av.NewClient(APIKEY1)
+	interval, _ := stock.ConvertTimeSeries(recovered_stock.TimeData)
 	result, err := client.StockTimeSeriesIntraday(interval, recovered_stock.Symbol)
 	if err != nil {
 	}
@@ -27,7 +29,9 @@ func GetStockDataForSymbol(recovered_stock stock.Stock, interval av.TimeInterval
 		return recovered_stock, false
 	}
 	price := fmt.Sprintf("%.3f", result[len(result)-1].Close)
+	json, _ := json.Marshal(result)
 	recovered_stock.Price = price
+	recovered_stock.Data = string(json)
 	return recovered_stock, true
 }
 
@@ -50,33 +54,53 @@ func LoadAllStocks(timeInterval string) {
 	var wg sync.WaitGroup
 	var currentWaitGroup int64
 	var maxRoutines int64
+	nameCache = make(map[string]string)
 	//because the free version of alpha-vantage, has a limitation, also limit the concrrent routines fetching stocks
 	maxRoutines = 5
 	var stocks []stock.Stock
-	stocks = stock.LoadAllStockSymbols(timeInterval)
-	logger.LogMessage("Starting to fetch stocks", logger.INFO)
-	for index := range stocks {
-		wg.Add(1)
-		currentWaitGroup++
-		LoadAndStoreStock(stocks[index], &wg)
-		if currentWaitGroup >= maxRoutines {
-			currentWaitGroup = 0
-			time.Sleep(1 * time.Minute)
-			wg.Wait()
+	timeIntervals := []string{
+		"1",
+		"5",
+		"15",
+		"30",
+		"60",
+	}
+	for index := range timeIntervals {
+		stocks = stock.LoadAllStockSymbols(timeIntervals[index])
+		logger.LogMessage("Starting to fetch stocks", logger.INFO)
+		for index := range stocks {
+			wg.Add(1)
+			currentWaitGroup++
+			LoadAndStoreStock(stocks[index], &wg)
+			if currentWaitGroup >= maxRoutines {
+				currentWaitGroup = 0
+				time.Sleep(1 * time.Minute)
+				wg.Wait()
+			}
 		}
 	}
 	wg.Wait()
 	currentWaitGroup = 0
+	//get the memory back
+	nameCache = make(map[string]string)
 	logger.LogMessage("Finished loading stocks", logger.INFO)
 }
 
+var nameCache map[string]string
+
 func LoadAndStoreStock(stocking stock.Stock, wg *sync.WaitGroup) {
 	defer wg.Done()
-	stock, success := GetStockDataForSymbol(stocking, stock.ConvertTimeSeries(stocking.TimeData))
+	stock, success := GetStockDataForSymbol(stocking)
 	if success {
 		logger.LogMessage(fmt.Sprintf("Stock %s was loaded", stock.Symbol), logger.INFO)
 		if stock.Company == "" {
-			stock.Company = GetCompanyNameForSymbol(stocking.Symbol)
+			value, ok := nameCache[stock.Symbol]
+			if ok == true {
+				stock.Company = value
+			} else {
+				stock.Company = GetCompanyNameForSymbol(stocking.Symbol)
+				nameCache[stocking.Symbol] = stock.Company
+			}
 		}
 		stock.Update()
 	}

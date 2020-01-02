@@ -3,7 +3,7 @@ package stock
 import (
 	"fmt"
 
-	av "github.com/cmckee-dev/go-alpha-vantage"
+	av "github.com/Liberatys/go-alpha-vantage"
 )
 
 func LoadStocksForRoute(timeSeries string) []Stock {
@@ -48,17 +48,32 @@ func LoadAllStockSymbols(timeSeries string) []Stock {
 	return stocks
 }
 
-func ConvertTimeSeries(series string) av.TimeInterval {
+func ConvertTimeSeries(series string) (av.TimeInterval, bool) {
 	switch series {
+	case "1":
+		return av.TimeIntervalOneMinute, true
 	case "5":
-		return av.TimeIntervalFiveMinute
+		return av.TimeIntervalFiveMinute, true
 	case "15":
-		return av.TimeIntervalFifteenMinute
+		return av.TimeIntervalFifteenMinute, true
 	case "30":
-		return av.TimeIntervalThirtyMinute
+		return av.TimeIntervalThirtyMinute, true
 	case "60":
-		return av.TimeIntervalSixtyMinute
+		return av.TimeIntervalSixtyMinute, true
 	default:
-		return av.TimeIntervalFiveMinute
+		return av.TimeIntervalFiveMinute, false
+	}
+}
+
+func ConvertTimeCap(cap string) av.TimeSeries {
+	switch cap {
+	case "Daily":
+		return av.TimeSeriesDaily
+	case "Weekly":
+		return av.TimeSeriesWeekly
+	case "Monthly":
+		return av.TimeSeriesMonthly
+	default:
+		return av.TimeSeriesDaily
 	}
 }

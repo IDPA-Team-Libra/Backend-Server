@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/Liberatys/libra-back/main/stock"
+	"github.com/gorilla/mux"
 )
 
 var stockData []stock.Stock
@@ -40,6 +41,18 @@ func GetStocks(w http.ResponseWriter, r *http.Request) {
 	serializedStockItems = data
 	stockData = stocks
 	w.Write(serializedStockItems)
+}
+
+func GetStockByParameter(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	symbol := params["symbol"]
+	interval := params["interval"]
+	stockInstance := stock.Stock{
+		Symbol:   symbol,
+		TimeData: interval,
+	}
+	stockInstance.Load()
+	w.Write([]byte(stockInstance.Data))
 }
 
 func compress(source string) []byte {

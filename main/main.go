@@ -50,6 +50,7 @@ func main() {
 	service.AddHTTPRoute("/user/register", Register)
 	service.AddHTTPRoute("/user/changePassword", ChangePassword)
 	service.AddHTTPRoute("/stock/all", GetStocks)
+	service.AddHTTPRoute("/stock/{symbol}/{interval}", GetStockByParameter)
 	service.AddHTTPRoute("/transaction/buy", AddTransaction)
 	service.AddHTTPRoute("/transaction/get/delayed", GetDelayedTransactionsByUser)
 	service.AddHTTPRoute("/transaction/sell", RemoveTransaction)
