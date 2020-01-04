@@ -70,7 +70,7 @@ CREATE TABLE portfolio_to_item (
 );
 
 CREATE TABLE performance (
-       id INTEGER,
+       id INTEGER AUTO_INCREMENT,
        userid INTEGER,
        date date,
        performance decimal(10, 2),
