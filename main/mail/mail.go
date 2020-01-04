@@ -68,14 +68,14 @@ func (mail *Mail) SendWelcomeEmail() {
 		`
 		Wilkommen neuer Nutzer<br /><br />
 
-		Es freut uns das Du dich für libra entschieden hast. 
-		Wir hoffen das Dir der Service gefällt und Deinen Ansprüchen entspricht. 
+		Es freut uns, dass Sie sich für libra entschieden haben. 
+		Wir hoffen, dass Ihnen der Service gefällt und Ihren Ansprüchen entspricht. 
 		<br /><br />
-		Wir werden Dich über Deine vertagten Transaktionen auf dem laufenden halten 
-		und Dich darüber hinaus so wenig wie möglich stören.
+		Wir werden Sie über Ihre vertagten Transaktionen auf dem laufenden halten 
+		und Sie darüber hinaus so wenig wie möglich stören.
 		<br /><br />
-		Ebenfalls halten wir es uns vor, Dir von Zeit zu Zeit eine Mail mit anfallenden Informationen zu senden.<br /><br />
-		Dein Libra-Team
+		Ebenfalls halten wir es uns vor, Ihnen von Zeit zu Zeit eine Mail mit anfallenden Informationen zu senden.<br /><br />
+		Ihr Libra-Team
 		<br /><br />
 		<i>Libra - The way to go</i>
 		<br />
@@ -93,19 +93,19 @@ func (mail *Mail) SendWelcomeEmail() {
 }
 
 func (mail *Mail) SendDelayedTransactionEmail(totalOperations int, results []string) {
-	mail.Subject = "Informationen zu deinen vertagten Transaktionen"
+	mail.Subject = "Informationen zu Ihren vertagten Transaktionen"
 	message :=
 		`
-		Hey... Du hast da einige vertagte Transaktionen gehabt, die heute durchgelaufen sind. <br />
-		Hier sind mal die Resultate Deiner Käufe und Verkäufe: <br /><br />
+		Ihre vertagten Transaktionen sind soeben abgeschlossen worden. <br />
+		Hier sind die Resultate Ihrer Käufe und Verkäufe: <br /><br />
 		<br />
 		<ul>
 	`
 	for index := range results {
 		message += fmt.Sprintf("<li>%s</li><br />", results[index])
 	}
-	message += "</ul><br /> Wir hoffen natürlich, dass du damit zufrieden bist.<br />"
-	message += `<b>Dein Libra-Team</b>
+	message += "</ul><br /> Wir hoffen natürlich, dass Sie damit zufrieden sind.<br />"
+	message += `<b>Ihr Libra-Team</b>
 		<br /><br />
 		<i>Libra - The way to go</i>
 		<br />
