@@ -12,12 +12,14 @@ import (
 	"github.com/Liberatys/libra-back/main/user"
 )
 
+//PortfolioContent holds the data sent to the client
 type PortfolioContent struct {
 	Message      string `json:"response"`
 	Items        string `json:"items"`
 	Transactions string `json:"transactions"`
 }
 
+//GetPortfolio get portfolio-information for a user
 func GetPortfolio(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {

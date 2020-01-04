@@ -13,16 +13,6 @@ CREATE TABLE USER (
        PRIMARY KEY (id)
 );
 
-CREATE TABLE useraction (
-       id INTEGER NOT NULL AUTO_INCREMENT,
-       userid INTEGER NOT NULL,
-       activity varchar (255),
-       accurance datetime,
-       status varchar (255),
-       PRIMARY KEY (id),
-       FOREIGN KEY (userid) REFERENCES USER (id)
-);
-
 CREATE TABLE TRANSACTION (
        id INTEGER NOT NULL AUTO_INCREMENT,
        userid INTEGER NOT NULL,
@@ -30,6 +20,7 @@ CREATE TABLE TRANSACTION (
        symbol varchar (255),
        amount INTEGER,
        value Decimal (50, 10),
+       current_balance Decimal(50,10),
        date date,
        processed boolean,
        PRIMARY KEY (id),

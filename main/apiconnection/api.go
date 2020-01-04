@@ -15,59 +15,41 @@ import (
 
 var keyRounds []string
 
-func GetStockDataForSymbol(recovered_stock stock.Stock, key string) (stock.Stock, bool) {
+//GetStockDataForSymbol loads the stock price and data from the alpha-vantage api
+func GetStockDataForSymbol(recoveredStock stock.Stock, key string) (stock.Stock, bool) {
 	client := av.NewClient(key)
-	interval, _ := stock.ConvertTimeSeries(recovered_stock.TimeData)
-	result, err := client.StockTimeSeriesIntraday(interval, recovered_stock.Symbol)
+	interval, _ := stock.ConvertTimeSeries(recoveredStock.TimeData)
+	result, err := client.StockTimeSeriesIntraday(interval, recoveredStock.Symbol)
 	if err != nil {
 	}
 	if err != nil {
 		return stock.Stock{}, false
 	}
 	if len(result) == 0 {
-		return recovered_stock, false
+		return recoveredStock, false
 	}
 	price := fmt.Sprintf("%.3f", result[len(result)-1].Close)
 	json, _ := json.Marshal(result)
-	recovered_stock.Price = price
-	recovered_stock.Data = string(json)
-	return recovered_stock, true
+	recoveredStock.Price = price
+	recoveredStock.Data = string(json)
+	return recoveredStock, true
 }
 
-//const APIKEY = "F1HqA-xHQe7tzNYtFf26"
-//func GetStockDataForSymbol(recovered_stock stock.Stock, interval av.TimeInterval) (stock.Stock, bool) {
-//	quandl.APIKey = APIKEY
-//	data, err := quandl.GetSymbol("WIKI/"+recovered_stock.Symbol, nil)
-//	if err != nil {
-//		fmt.Println(err.Error())
-//	}
-//	if len(data.Data) == 0 {
-//		return recovered_stock, false
-//	}
-//	value := fmt.Sprintf("%v", data.Data[0][2])
-//	recovered_stock.Price = value
-//	return recovered_stock, true
-//}
-
+//LoadAllStocks loads the stock information for all stocks in the database
 func LoadAllStocks(timeInterval string) {
 	var wg sync.WaitGroup
 	var currentWaitGroup int64
 	var maxRoutines int64
 	keyRounds = []string{
 		"CG96DXD2YPARDLMX",
-		"GJQQ5PRFZSPZSENI",
-		"9PW8B5GO7RHT3XJ5",
-		"7JJ4KU81J5CDN1CU",
-		"6CXB51K9FI74XVK",
-		"PAKC21FC1QJR6YMX",
 	}
 	nameCache = make(map[string]string)
 	//because the free version of alpha-vantage, has a limitation, also limit the concrrent routines fetching stocks
-	maxRoutines = 30
+	maxRoutines = 5
 	var stocks []stock.Stock
 	timeIntervals := []string{
-		"1",
 		"5",
+		"1",
 		"15",
 		"30",
 		"60",
@@ -80,12 +62,6 @@ func LoadAllStocks(timeInterval string) {
 		for index := range stocks {
 			wg.Add(1)
 			currentWaitGroup++
-			if currentWaitGroup%5 == 0 {
-				keyIndex++
-				if keyIndex == len(keyRounds)-1 {
-					keyIndex = 0
-				}
-			}
 			LoadAndStoreStock(stocks[index], &wg, keyRounds[keyIndex])
 			if currentWaitGroup >= maxRoutines {
 				currentWaitGroup = 0
@@ -103,10 +79,10 @@ func LoadAllStocks(timeInterval string) {
 
 var nameCache map[string]string
 
+//LoadAndStoreStock load stock information and write the new data to the database
 func LoadAndStoreStock(stocking stock.Stock, wg *sync.WaitGroup, key string) {
 	defer wg.Done()
 	stock, success := GetStockDataForSymbol(stocking, key)
-	fmt.Println(success)
 	if success {
 		logger.LogMessage(fmt.Sprintf("Stock %s was loaded", stock.Symbol), logger.INFO)
 		if stock.Company == "" {
@@ -122,6 +98,7 @@ func LoadAndStoreStock(stocking stock.Stock, wg *sync.WaitGroup, key string) {
 	}
 }
 
+//YahooReponse a struct for parsing the yahoo response to resolve company names
 type YahooReponse struct {
 	ResultSet struct {
 		Query  string `json:"Query"`
@@ -136,6 +113,7 @@ type YahooReponse struct {
 	} `json:"ResultSet"`
 }
 
+//GetCompanyNameForSymbol returns the company name for a given stock-symbol -- only executed if stock has no company set [will only execute the first iteration]
 func GetCompanyNameForSymbol(symbol string) string {
 	url := fmt.Sprintf("http://d.yimg.com/autoc.finance.yahoo.com/autoc?query=%s&region=1&lang=en", symbol)
 	resp, err := http.Get(url)

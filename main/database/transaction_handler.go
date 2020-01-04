@@ -19,7 +19,8 @@ func CreateTransaction(transaction transaction.Transaction, portfolio user.Portf
 		return false
 	}
 	transaction.Symbol = stockInstance.Symbol
-	if transaction.Write(true, handler) == false {
+	newBalanceValue := portfolio.Balance.Sub(&portfolio.Balance, &totalPrice)
+	if transaction.Write(true, handler, newBalanceValue.String()) == false {
 		handler.Rollback()
 		return false
 	}

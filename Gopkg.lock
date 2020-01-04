@@ -19,7 +19,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f5a4c7b7bd7b5a49f6b14c5634718b4c6e41d87ae3fce1256ce043951b1ddc22"
+  digest = "1:a09d3288910349161f5a36f1f0377322d40e3a4f0ccb4315f0297cfa8fae1126"
   name = "github.com/Liberatys/Sanctuary"
   packages = [
     "communication",
@@ -28,7 +28,15 @@
     "service",
   ]
   pruneopts = "UT"
-  revision = "4684ed9ba301254635e6c800d42aea83d3b03121"
+  revision = "340e0ec6aba0ed125d2b132518f8b9491ecbeb70"
+
+[[projects]]
+  branch = "master"
+  digest = "1:fd14355d05cc23ec2bfe79be5fd932bffe8ce4b9feac1c750c13258ebd848635"
+  name = "github.com/Liberatys/go-alpha-vantage"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "f6d44fa134e5fa530fc20f564735c83489d0170b"
 
 [[projects]]
   digest = "1:320e7ead93de9fd2b0e59b50fd92a4d50c1f8ab455d96bc2eb083267453a9709"
@@ -39,28 +47,12 @@
   version = "v9"
 
 [[projects]]
-  branch = "master"
-  digest = "1:e18ab9c3fcabf0bd47ef009fcd8a80c0cfb642b48984395bfd542cd3c507f3b8"
-  name = "github.com/cmckee-dev/go-alpha-vantage"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "f8ae72eef75c9075554e9efb28e1618c22f8ca64"
-
-[[projects]]
   digest = "1:76dc72490af7174349349838f2fe118996381b31ea83243812a97e5a0fd5ed55"
   name = "github.com/dgrijalva/jwt-go"
   packages = ["."]
   pruneopts = "UT"
   revision = "06ea1031745cb8b3dab3f6a236daf2b0aa468b7e"
   version = "v3.2.0"
-
-[[projects]]
-  digest = "1:3806f369b846160fcbde19bdcf93790868defe7c58d1bb6bc8d974c5b8f8dc1e"
-  name = "github.com/go-mail/mail"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "f59b9b83a4e522098e3d3eb94e6f81850ad6e973"
-  version = "v2.3.1"
 
 [[projects]]
   digest = "1:ec6f9bf5e274c833c911923c9193867f3f18788c461f76f05f62bb1510e0ae65"
@@ -79,6 +71,18 @@
   version = "v1.7.3"
 
 [[projects]]
+  digest = "1:b640f196e31078d2ff78476ccb4487b5ac71c7a6f5be8ca2b7f5bb45cd215a07"
+  name = "github.com/mailjet/mailjet-apiv3-go"
+  packages = [
+    ".",
+    "fixtures",
+    "resources",
+  ]
+  pruneopts = "UT"
+  revision = "4597cb4aae1236575fcd3f7c09544191e1e0aa35"
+  version = "2.4.5"
+
+[[projects]]
   digest = "1:c805e517269b0ba4c21ded5836019ed7d16953d4026cb7d00041d039c7906be9"
   name = "github.com/natefinch/lumberjack"
   packages = ["."]
@@ -95,12 +99,12 @@
   version = "v0.8.1"
 
 [[projects]]
-  digest = "1:b778880d47d8544b11cd82b0d9731f9669d653489b400d0b5899b8a20934e7b4"
+  digest = "1:32db15a47b5be06a5d40e863ab0ebed107741845fd2d8676121f788284d26923"
   name = "github.com/robfig/cron"
   packages = ["."]
   pruneopts = "UT"
-  revision = "45fbe1491cdd47d74d1bf1396286d67faee8b8b5"
-  version = "v3.0.0"
+  revision = "ccba498c397bb90a9c84945bbb0f7af2d72b6309"
+  version = "v3.0.1"
 
 [[projects]]
   digest = "1:c708d00d1097e62bf4f3a72f239efa7dafc257581421b0b7d3789e1ff5299f30"
@@ -165,7 +169,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ee4343e785e3f49ec5329fbe160a89da4076fae28cf799ce3e74b5654128df5f"
+  digest = "1:76bee8ca40c675fe4671faf0d1583a2ecca3ddfc4ac68325c31315e97725520f"
   name = "golang.org/x/tools"
   packages = [
     "go/analysis",
@@ -184,7 +188,7 @@
     "internal/semver",
   ]
   pruneopts = "UT"
-  revision = "7b8e75db28f4b09dc0b853eadee5b034956bcb9e"
+  revision = "774c71fcf11405d0a5ce0aba75dc113822d62178"
 
 [[projects]]
   digest = "1:c25289f43ac4a68d88b02245742347c94f1e108c534dda442188015ff80669b3"
@@ -193,14 +197,6 @@
   pruneopts = "UT"
   revision = "971852bfffca25b069c31162ae8f247a3dba083b"
   version = "v1.6.5"
-
-[[projects]]
-  branch = "v3"
-  digest = "1:7388652e2215a3f45d341d58766ed58317971030eb1cbd75f005f96ace8e9196"
-  name = "gopkg.in/alexcesaro/quotedprintable.v3"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "2caba252f4dc53eaf6b553000885530023f54623"
 
 [[projects]]
   digest = "1:131158a88aad1f94854d0aa21a64af2802d0a470fb0f01cb33c04fafd2047111"
@@ -242,10 +238,11 @@
   input-imports = [
     "github.com/DATA-DOG/go-sqlmock",
     "github.com/Liberatys/Sanctuary/service",
+    "github.com/Liberatys/go-alpha-vantage",
     "github.com/asaskevich/govalidator",
-    "github.com/cmckee-dev/go-alpha-vantage",
     "github.com/dgrijalva/jwt-go",
-    "github.com/go-mail/mail",
+    "github.com/gorilla/mux",
+    "github.com/mailjet/mailjet-apiv3-go",
     "github.com/natefinch/lumberjack",
     "github.com/robfig/cron",
     "go.uber.org/zap",

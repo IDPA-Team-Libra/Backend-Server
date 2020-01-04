@@ -13,6 +13,7 @@ import (
 	"github.com/Liberatys/libra-back/main/user"
 )
 
+//Outcome the result of a transaction execution
 type Outcome struct {
 	Operation string
 	Sucess    bool
@@ -21,6 +22,7 @@ type Outcome struct {
 	Amount    int64
 }
 
+//StartBatchProcess collect all delayed transaction for the current date and execute them
 func StartBatchProcess(databaseConnection *sql.DB) {
 	transactions := LoadDelayedTransactions(databaseConnection)
 	var operations map[int64][]Outcome
@@ -57,6 +59,7 @@ func StartBatchProcess(databaseConnection *sql.DB) {
 	SendUpdatesPerUser(operations, databaseConnection)
 }
 
+//SendUpdatesPerUser sends an email with the outcome of his transaction execution
 func SendUpdatesPerUser(mapping map[int64][]Outcome, databaseConnection *sql.DB) {
 	for key, value := range mapping {
 		userInstance := user.User{
@@ -85,11 +88,13 @@ func SendUpdatesPerUser(mapping map[int64][]Outcome, databaseConnection *sql.DB)
 	}
 }
 
+//LoadDelayedTransactions loads delayed transactions
 func LoadDelayedTransactions(databaseConnection *sql.DB) []transaction.Transaction {
 	transaction := transaction.Transaction{}
 	return transaction.LoadTransactionsByProcessState(-1, databaseConnection, false)
 }
 
+//BatchBuyTransactions handles delayed sell transactions
 func BatchBuyTransactions(transaction transaction.Transaction, conn *sql.DB) (bool, string) {
 	currentUser := user.User{
 		Username: user.GetUsernameByID(transaction.UserID, conn),
@@ -117,10 +122,12 @@ func BatchBuyTransactions(transaction transaction.Transaction, conn *sql.DB) (bo
 	return true, "Alles Super"
 }
 
+//ExtractStockNameWithTrim extracts the stockname from a field
 func ExtractStockNameWithTrim(description string) string {
 	return strings.TrimSpace(ExtractStockName(description))
 }
 
+//ExtractStockName extract the stockname from a field
 func ExtractStockName(description string) string {
 	parts := strings.Split(description, " ")
 	if len(parts) == 1 {
@@ -129,6 +136,7 @@ func ExtractStockName(description string) string {
 	return parts[1]
 }
 
+//BatchSellTransactions handles the delayed buy transactions
 func BatchSellTransactions(transaction transaction.Transaction, conn *sql.DB) (bool, string) {
 	currentUser := user.User{
 		Username: user.GetUsernameByID(transaction.UserID, conn),
@@ -155,10 +163,6 @@ func BatchSellTransactions(transaction transaction.Transaction, conn *sql.DB) (b
 	}
 	changedItems := SubtractStocksFromTotalAmount(items, requestCount)
 	UpdateOrDeleteStocks(changedItems, handler)
-	if transaction.Write(true, handler) == false {
-		handler.Rollback()
-		return false, "Server-Problem"
-	}
 	userID := user.GetUserIDByUsername(currentUser.Username, conn)
 	portfolio := user.LoadPortfolio(userID, conn)
 	portfolio.TotalStocks -= transaction.Amount
@@ -166,6 +170,10 @@ func BatchSellTransactions(transaction transaction.Transaction, conn *sql.DB) (b
 	additionalBalance := MultiplyString(s, requestedStock.Price)
 	portfolio.Balance = *portfolio.Balance.Add(&portfolio.Balance, additionalBalance)
 	portfolio.CurrentValue = *portfolio.CurrentValue.Sub(&portfolio.CurrentValue, additionalBalance)
+	if transaction.Write(true, handler, portfolio.Balance.String()) == false {
+		handler.Rollback()
+		return false, "Server-Problem"
+	}
 	if portfolio.Update(handler) == false {
 		handler.Rollback()
 		return false, "Server-Problem"

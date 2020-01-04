@@ -12,6 +12,7 @@ func SetDatabaseConnection(connection *sql.DB) {
 	databaseConnection = connection
 }
 
+//RetreaveAllEmailAdresses load all email adresses from the database
 func RetreaveAllEmailAdresses() []string {
 	statement, err := databaseConnection.Prepare("SELECT email FROM user")
 	defer statement.Close()

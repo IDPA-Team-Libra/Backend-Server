@@ -38,6 +38,7 @@ func (item *PortfolioItem) Write(connection *sql.Tx) bool {
 	return true
 }
 
+//LoadUserItems loads all portfolioitems for a user
 func LoadUserItems(userID int64, Symbol string, connection *sql.DB) []PortfolioItem {
 	statement, err := connection.Prepare("SELECT p_i.id, buy_price,quantity,total_buy_price,stock_id FROM portfolio_item p_i, portfolio_to_item p_i_t, Portfolio port WHERE p_i_t.portfolio_item_id = p_i.id AND p_i_t.portfolio_id = port.id AND port.user_id = ?")
 	defer statement.Close()
@@ -70,6 +71,7 @@ func LoadUserItems(userID int64, Symbol string, connection *sql.DB) []PortfolioI
 	return items
 }
 
+//Update updates a portfolio in the database
 func (item *PortfolioItem) Update(connetion *sql.Tx) bool {
 	statement, err := connetion.Prepare("UPDATE portfolio_item SET quantity = ? WHERE id = ?")
 	defer statement.Close()
@@ -85,6 +87,7 @@ func (item *PortfolioItem) Update(connetion *sql.Tx) bool {
 	return true
 }
 
+//RemoveItemAndConnection removes the connction between a portfolio and an item and removes the item
 func (item *PortfolioItem) RemoveItemAndConnection(connection *sql.Tx) bool {
 	if item.RemoveConnection(connection) {
 		return item.Remove(connection)
@@ -92,14 +95,17 @@ func (item *PortfolioItem) RemoveItemAndConnection(connection *sql.Tx) bool {
 	return false
 }
 
+//RemoveConnection removes the connction between a portfolio and an item
 func (item *PortfolioItem) RemoveConnection(databaseConnection *sql.Tx) bool {
 	return RemoveEntryByQuery(databaseConnection, "DELETE FROM portfolio_to_item WHERE portfolio_item_id = ?", item.ID)
 }
 
+//Remove removes the item from the database
 func (item *PortfolioItem) Remove(databaseConnection *sql.Tx) bool {
 	return RemoveEntryByQuery(databaseConnection, "DELETE FROM portfolio_item WHERE id = ?", item.ID)
 }
 
+//RemoveEntryByQuery helper method to execute queries for the removeConnection
 func RemoveEntryByQuery(databaseConnection *sql.Tx, query string, parameters ...interface{}) bool {
 	statement, err := databaseConnection.Prepare(query)
 	defer statement.Close()

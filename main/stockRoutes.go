@@ -14,14 +14,17 @@ import (
 var stockData []stock.Stock
 var serializedStockItems []byte
 
-type StockHolderstruct struct {
+//Stocks is a serialized holder for stocks
+type Stocks struct {
 	Stocks []stock.Stock `json:"stocks"`
 }
 
+//PurgeStockScreen removes all memory stored stock values
 func PurgeStockScreen() {
 	stockData = nil
 }
 
+//GetStocks returns all stock items that are used for the market page
 func GetStocks(w http.ResponseWriter, r *http.Request) {
 	if len(stockData) > 0 && stockData != nil {
 		w.Write(serializedStockItems)
@@ -31,7 +34,7 @@ func GetStocks(w http.ResponseWriter, r *http.Request) {
 	for key := range stocks {
 		stocks[key].Load()
 	}
-	stockHolderInstance := StockHolderstruct{
+	stockHolderInstance := Stocks{
 		stocks,
 	}
 	data, err := json.Marshal(stockHolderInstance)
@@ -43,6 +46,7 @@ func GetStocks(w http.ResponseWriter, r *http.Request) {
 	w.Write(serializedStockItems)
 }
 
+//GetStockByParameter returns information for the grahpics backend in dash
 func GetStockByParameter(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	symbol := params["symbol"]
@@ -55,6 +59,7 @@ func GetStockByParameter(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(stockInstance.Data))
 }
 
+// method that comes to use in a later iteration, where more stocks are transfered
 func compress(source string) []byte {
 	buf := new(bytes.Buffer)
 	w, _ := flate.NewWriter(buf, 7)

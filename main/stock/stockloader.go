@@ -6,6 +6,7 @@ import (
 	av "github.com/Liberatys/go-alpha-vantage"
 )
 
+//LoadStocksForRoute loads all stocks for the stockRoute
 func LoadStocksForRoute(timeSeries string) []Stock {
 	databaseConnection := database
 	var stocks []Stock
@@ -27,6 +28,7 @@ func LoadStocksForRoute(timeSeries string) []Stock {
 	return stocks
 }
 
+//LoadAllStockSymbols gets all stocks from the database that have a given timeSeries [1,5,15,30,60]
 func LoadAllStockSymbols(timeSeries string) []Stock {
 	databaseConnection := database
 	var stocks []Stock
@@ -48,6 +50,7 @@ func LoadAllStockSymbols(timeSeries string) []Stock {
 	return stocks
 }
 
+//ConvertTimeSeries converts a string into an av datatype
 func ConvertTimeSeries(series string) (av.TimeInterval, bool) {
 	switch series {
 	case "1":
@@ -65,6 +68,7 @@ func ConvertTimeSeries(series string) (av.TimeInterval, bool) {
 	}
 }
 
+//ConvertTimeCap a method to convert a string to an av.TimeSeries
 func ConvertTimeCap(cap string) av.TimeSeries {
 	switch cap {
 	case "Daily":
