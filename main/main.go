@@ -65,6 +65,7 @@ func main() {
 	service.AddHTTPRoute("/transaction/all", GetUserTransaction)
 	service.AddHTTPRoute("/portfolio/get", GetPortfolio)
 	service.AddHTTPRoute("/authenticate/token", ValidateUserToken)
+	service.AddHTTPRoute("/performance/get", ValidateUserToken)
 	/*
 		END SPACE FOR ROUTES
 	*/
