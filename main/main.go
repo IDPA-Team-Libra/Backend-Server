@@ -10,6 +10,7 @@ import (
 	"github.com/Liberatys/libra-back/main/database"
 	"github.com/Liberatys/libra-back/main/logger"
 	"github.com/Liberatys/libra-back/main/mail"
+	"github.com/Liberatys/libra-back/main/performance"
 	"github.com/Liberatys/libra-back/main/stock"
 	"github.com/robfig/cron"
 )
@@ -32,7 +33,7 @@ func main() {
 	SetupLogger()
 	defer logger.SyncLogger()
 	logger.LogMessage("Server has started on 3440", logger.INFO)
-	service.ActivateHTTPSServer("certs/server.crt", "certs/server.key")
+	service.ActivateHTTPServer()
 	service.SetDatabaseInformation("localhost", "3306", "mysql", "administrator", "LOCAL1234", "libra")
 	//service.SetDatabaseInformation("localhost", "3306", "mysql", "root", "pw123", "libra")
 	db := service.GetDatabaseConnection()
@@ -44,6 +45,9 @@ func main() {
 		Sender:    "librastockcompany@gmail.com",
 		GmailPass: "Hc6EGgQ5ANjVwTY",
 	})
+
+	performance.UpdatePerformance(GetDatabaseInstance())
+
 	/*
 		SPACE FOR ROUTES
 	*/
@@ -66,6 +70,7 @@ func main() {
 	go apiconnection.LoadAllStocks("5")
 	SetupCronJobs()
 	service.StartHTTPServer()
+
 }
 
 func setDatabaseReferences(database *sql.DB) {
