@@ -49,9 +49,6 @@ func main() {
 		Pass:   "0508f610ab733eb6bc27d06587854697",
 		UserID: "0d3a0e52dc9907a6ba30762a2a0999c3",
 	})
-
-	performance.UpdatePerformance(GetDatabaseInstance())
-
 	/*
 		SPACE FOR ROUTES
 	*/
@@ -98,6 +95,9 @@ func SetupCronJobs() {
 	}
 	_, err = cronJob.AddFunc("@midnight", func() {
 		database.StartBatchProcess(GetDatabaseInstance())
+	})
+	_, err = cronJob.AddFunc("@midnight", func() {
+		performance.UpdatePerformance(GetDatabaseInstance())
 	})
 	if err != nil {
 		panic(err.Error())
