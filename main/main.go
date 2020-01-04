@@ -17,11 +17,13 @@ import (
 
 var dbConn *sql.DB
 
+//SetupLogger creates a new logger instance
 func SetupLogger() {
 	logFilePath, _ := filepath.Abs(fmt.Sprintf("log/libra_log"))
 	logger.SetupLogger(logFilePath)
 }
 
+//GetDatabaseInstance a "global" method to get a reference to the sql.DB
 func GetDatabaseInstance() *sql.DB {
 	return dbConn
 }
@@ -34,6 +36,7 @@ func main() {
 	defer logger.SyncLogger()
 	logger.LogMessage("Server has started on 3440", logger.INFO)
 	service.ActivateHTTPServer()
+	//service.ActivateHTTPSServer("certs/server.crt", "certs/server.key")
 	service.SetDatabaseInformation("localhost", "3306", "mysql", "administrator", "LOCAL1234", "libra")
 	//service.SetDatabaseInformation("localhost", "3306", "mysql", "root", "pw123", "libra")
 	db := service.GetDatabaseConnection()
@@ -41,9 +44,10 @@ func main() {
 	dbConn = db
 	setDatabaseReferences(db)
 	defer db.Close()
-	mail.SetMailConfiguration(mail.MailConfiguration{
-		Sender:    "librastockcompany@gmail.com",
-		GmailPass: "Hc6EGgQ5ANjVwTY",
+	mail.SetMailConfiguration(mail.Configuration{
+		Sender: "librastockcompany@gmail.com",
+		Pass:   "0508f610ab733eb6bc27d06587854697",
+		UserID: "0d3a0e52dc9907a6ba30762a2a0999c3",
 	})
 
 	performance.UpdatePerformance(GetDatabaseInstance())
@@ -86,7 +90,7 @@ func SetupCronJobs() {
 	if err != nil {
 		panic(err.Error())
 	}
-	_, err = cronJob.AddFunc("@every 20m", func() {
+	_, err = cronJob.AddFunc("@every 25m", func() {
 		PurgeStockScreen()
 	})
 	if err != nil {

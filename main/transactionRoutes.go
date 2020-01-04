@@ -15,6 +15,7 @@ import (
 	"github.com/Liberatys/libra-back/main/user"
 )
 
+//TransactionRequest holds information about a requested transaction by the user
 type TransactionRequest struct {
 	AuthToken          string `json:"authToken"`
 	Username           string `json:"username"`
@@ -25,6 +26,7 @@ type TransactionRequest struct {
 	ExpectedStockPrice string `json:"expectedStockPrice"`
 }
 
+//TransactionResponse holds information sent to the client regarding his request
 type TransactionResponse struct {
 	Message   string `json:"message"`
 	State     string `json:"state"`
@@ -33,11 +35,7 @@ type TransactionResponse struct {
 	Value     string `json:"transactionValue"`
 }
 
-type FutureTransactionOption struct {
-	TransactionRequest TransactionRequest `json:"transactionRequest"`
-	SetDate            string             `json:"setDate"`
-}
-
+//GetUserTransaction returns all transactions executed by a user [only once that have been executed]
 func GetUserTransaction(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -82,10 +80,12 @@ func GetUserTransaction(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonObject)
 }
 
+//DelayedTrasactionResponse a struct that holds transactions
 type DelayedTrasactionResponse struct {
 	Transactions string `json:"transactions"`
 }
 
+//GetDelayedTransactionsByUser returns all not yet executed transactions for a user
 func GetDelayedTransactionsByUser(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -134,6 +134,7 @@ func GetDelayedTransactionsByUser(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonObject)
 }
 
+//RemoveTransaction removes a stockitem from a user
 func RemoveTransaction(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -190,13 +191,6 @@ func RemoveTransaction(w http.ResponseWriter, r *http.Request) {
 		w.Write(obj)
 		return
 	}
-	transaction := transaction.NewTransaction(userInstance.ID, request.Operation, request.StockSymbol, request.Amount, requestedStock.Price, request.Date)
-	if transaction.Write(true, handler) == false {
-		handler.Rollback()
-		obj, _ := json.Marshal("Invalid request format")
-		w.Write(obj)
-		return
-	}
 	userID := user.GetUserIDByUsername(currentUser.Username, GetDatabaseInstance())
 	portfolio := user.LoadPortfolio(userID, GetDatabaseInstance())
 	portfolio.TotalStocks -= request.Amount
@@ -204,6 +198,13 @@ func RemoveTransaction(w http.ResponseWriter, r *http.Request) {
 	additionalBalance := database.MultiplyString(s, requestedStock.Price)
 	portfolio.Balance = *portfolio.Balance.Add(&portfolio.Balance, additionalBalance)
 	portfolio.CurrentValue = *portfolio.CurrentValue.Sub(&portfolio.CurrentValue, additionalBalance)
+	transaction := transaction.NewTransaction(userInstance.ID, request.Operation, request.StockSymbol, request.Amount, requestedStock.Price, request.Date)
+	if transaction.Write(true, handler, portfolio.Balance.String()) == false {
+		handler.Rollback()
+		obj, _ := json.Marshal("Invalid request format")
+		w.Write(obj)
+		return
+	}
 	if portfolio.Update(handler) == false {
 		handler.Rollback()
 		response := TransactionResponse{
@@ -231,6 +232,7 @@ func RemoveTransaction(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+//AddTransaction executes a buy order from the user
 func AddTransaction(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -250,7 +252,6 @@ func AddTransaction(w http.ResponseWriter, r *http.Request) {
 	userID := user.GetUserIDByUsername(request.Username, GetDatabaseInstance())
 	currentUser.ID = userID
 	if userID <= 0 {
-		fmt.Println("Invalud userID")
 		return
 	}
 	validator := sec.NewTokenValidator(request.AuthToken, request.Username)
@@ -298,6 +299,7 @@ func AddTransaction(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(obj))
 }
 
+//HandleDelayedTransaction authenticates the user and builds a new transaction
 func HandleDelayedTransaction(w http.ResponseWriter, r *http.Request) (bool, transaction.Transaction) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -343,6 +345,7 @@ func HandleDelayedTransaction(w http.ResponseWriter, r *http.Request) (bool, tra
 	return true, transaction
 }
 
+//AddDelayedBuyTransaction adds a delayed buy order to the user
 func AddDelayedBuyTransaction(w http.ResponseWriter, r *http.Request) {
 	authenticated, transaction := HandleDelayedTransaction(w, r)
 	if authenticated == false {
@@ -351,7 +354,7 @@ func AddDelayedBuyTransaction(w http.ResponseWriter, r *http.Request) {
 	handler, err := GetDatabaseInstance().Begin()
 	if err != nil {
 	}
-	if transaction.Write(false, handler) == false {
+	if transaction.Write(false, handler, "") == false {
 		response := TransactionResponse{
 			Message:   "Kauf konnte nicht abgewickelt werden",
 			State:     "Failure",
@@ -374,6 +377,7 @@ func AddDelayedBuyTransaction(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(obj))
 }
 
+//AddDelayedSellTransaction adds a delayed sell action to a user
 func AddDelayedSellTransaction(w http.ResponseWriter, r *http.Request) {
 	authenticated, transaction := HandleDelayedTransaction(w, r)
 	if authenticated == false {
@@ -383,7 +387,7 @@ func AddDelayedSellTransaction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 
 	}
-	if transaction.Write(false, handler) == false {
+	if transaction.Write(false, handler, "") == false {
 		response := TransactionResponse{
 			Message:   "Verkauf konnte nicht abgewickelt werden",
 			State:     "Failure",

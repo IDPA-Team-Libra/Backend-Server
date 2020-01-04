@@ -2,42 +2,41 @@ package mail
 
 import (
 	"fmt"
+	"log"
 
-	gmail "github.com/go-mail/mail"
+	mailjet "github.com/mailjet/mailjet-apiv3-go"
 )
 
+//Mail struct to hold auth and message information for a mail
 type Mail struct {
-	Sender    string
-	Receaver  string
-	GmailPass string
-	Message   string
-	Subject   string
+	Sender   string
+	Receaver string
+	Pass     string
+	Message  string
+	Subject  string
+	UserID   string
 }
 
-type SMPTServer struct {
-	host string
-	port string
+//Configuration contains auth elements for the mail
+type Configuration struct {
+	Sender string
+	Pass   string
+	UserID string
 }
 
-type MailConfiguration struct {
-	Sender    string
-	GmailPass string
-}
+var mailConfiguration Configuration
 
-var mailConfiguration MailConfiguration
-
-func SetMailConfiguration(configuration MailConfiguration) {
+//SetMailConfiguration sets the global mail config
+func SetMailConfiguration(configuration Configuration) {
 	mailConfiguration = configuration
 }
 
-func LoadMailConfiguration() MailConfiguration {
+//LoadMailConfiguration gets the global mail config
+func LoadMailConfiguration() Configuration {
 	return mailConfiguration
 }
 
-func (s *SMPTServer) serverName() string {
-	return s.host + ":" + s.port
-}
-
+//NewMail create a new mail
 func NewMail(Receaver string) Mail {
 	mail := Mail{
 		Receaver: Receaver,
@@ -45,20 +44,38 @@ func NewMail(Receaver string) Mail {
 	return mail
 }
 
-func (mail *Mail) ApplyConfiguration(configuration MailConfiguration) {
+//ApplyConfiguration applys the configuration to the mail instance
+func (mail *Mail) ApplyConfiguration(configuration Configuration) {
 	mail.Sender = configuration.Sender
-	mail.GmailPass = configuration.GmailPass
+	mail.Pass = configuration.Pass
+	mail.UserID = configuration.UserID
 }
 
+//SendEmail sends the mail over the mailjet api [gmail blacklisted the server, so move to a non smtp api]
 func (mail *Mail) SendEmail() {
-	m := gmail.NewMessage()
-	m.SetHeader("From", mail.Sender)
-	m.SetHeader("To", mail.Receaver)
-	m.SetHeader("Subject", mail.Subject)
-	m.SetBody("text/html", mail.Message)
-	d := gmail.NewDialer("smtp.gmail.com", 587, mail.Sender, mail.GmailPass)
-	if err := d.DialAndSend(m); err != nil {
-		panic(err)
+	mailjetClient := mailjet.NewMailjetClient(mail.UserID, mail.Pass)
+	messagesInfo := []mailjet.InfoMessagesV31{
+		mailjet.InfoMessagesV31{
+			From: &mailjet.RecipientV31{
+				Email: mail.Sender,
+				Name:  "Gmail",
+			},
+			To: &mailjet.RecipientsV31{
+				mailjet.RecipientV31{
+					Email: mail.Receaver,
+					Name:  mail.Receaver,
+				},
+			},
+			Subject:  mail.Subject,
+			TextPart: "",
+			HTMLPart: mail.Message,
+			CustomID: "Libra-Email",
+		},
+	}
+	messages := mailjet.MessagesV31{Info: messagesInfo}
+	_, err := mailjetClient.SendMailV31(&messages)
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
@@ -92,6 +109,7 @@ func (mail *Mail) SendWelcomeEmail() {
 	mail.SendEmail()
 }
 
+//SendDelayedTransactionEmail sends an update to the user regarding his delayed transactions
 func (mail *Mail) SendDelayedTransactionEmail(totalOperations int, results []string) {
 	mail.Subject = "Informationen zu Ihren vertagten Transaktionen"
 	message :=

@@ -40,14 +40,19 @@ func SyncLogger() {
 
 var loggerInstance *zap.SugaredLogger
 
+//LogLevel iota for different log levels
 type LogLevel int64
 
 const (
+	//INFO -- default log level
 	INFO LogLevel = iota
+	//WARNING -- log level for events that should be investigated
 	WARNING
+	//ERROR -- something happend, that should be solved asap
 	ERROR
 )
 
+//LogMessage logs a message to the file
 func LogMessage(message string, logLevel LogLevel, fields ...zap.Field) {
 	if len(fields) == 0 {
 		LogWithoutFields(message, logLevel)
@@ -61,6 +66,8 @@ func LogMessage(message string, logLevel LogLevel, fields ...zap.Field) {
 		loggerInstance.Error(message, fields)
 	}
 }
+
+//LogWithoutFields logs a message without zap fields
 func LogWithoutFields(message string, logLevel LogLevel) {
 	if logLevel == INFO {
 		loggerInstance.Info(message)
@@ -70,6 +77,8 @@ func LogWithoutFields(message string, logLevel LogLevel) {
 		loggerInstance.Error(message)
 	}
 }
+
+//LogMessageWithOrigin logs a message with its origin
 func LogMessageWithOrigin(message string, logLevel LogLevel, origin string) {
 	message = fmt.Sprintf("%s -- %s", message, origin)
 	LogMessage(message, logLevel)

@@ -15,6 +15,12 @@ import (
 
 var jwtKey = []byte("Secret")
 
+//SetJWTKey sets the jwt key
+func SetJWTKey(key string) {
+	jwtKey = []byte(key)
+}
+
+//User holds information about a user that is sent to the client
 type User struct {
 	Username     string              `json:"username"`
 	Password     string              `json:"password"`
@@ -24,6 +30,7 @@ type User struct {
 	Portfolio    SerializedPortfolio `json:"portfolio"`
 }
 
+//SerializedPortfolio contains the response data upon a request for a portfolio
 type SerializedPortfolio struct {
 	CurrentBalance string `json:"currentBalance"`
 	CurrentValue   string `json:"currentValue"`
@@ -31,11 +38,7 @@ type SerializedPortfolio struct {
 	StartCapital   string `json:"startCapital"`
 }
 
-type Author struct {
-	Token    string `json:"token"`
-	Username string `json:"username"`
-}
-
+//Login handles the login action for a user
 func Login(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -52,7 +55,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	_, value := userInstance.GetPasswordHashByUsername(GetDatabaseInstance())
 	userInstance.ID = user.GetUserIDByUsername(userInstance.Username, GetDatabaseInstance())
 	success, message := userInstance.Authenticate(GetDatabaseInstance(), value)
-	fmt.Println(success)
 	response := sec.Response{}
 	if success == true {
 		response = GenerateTokenForUser(currentUser.Username)
@@ -77,6 +79,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp)
 }
 
+//ConvertPortfolioToSerialized only takes values from portfolio that can be shown to the user
 func ConvertPortfolioToSerialized(portfolioInstance user.Portfolio) SerializedPortfolio {
 	serializedPortfolio := SerializedPortfolio{
 		CurrentValue:   portfolioInstance.CurrentValue.String(),
@@ -88,14 +91,17 @@ func ConvertPortfolioToSerialized(portfolioInstance user.Portfolio) SerializedPo
 }
 
 const (
+	//DefaultStartCapital the default value for the user capital -- only taken if no other value is set during registration
 	DefaultStartCapital = 1000000
 )
 
+//GenerateTokenForUser creates a new jwt token for the user
 func GenerateTokenForUser(username string) sec.Response {
 	creator := sec.TokenCreator{Username: username, Secret: jwtKey}
 	return creator.CreateToken()
 }
 
+//Register the registration route that handles the registration of a user
 func Register(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -146,6 +152,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+//ValidateUserToken checks if a token is valid or not
 func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -175,6 +182,7 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp)
 }
 
+//Logout only in place for later usage, not being called at the moment
 func Logout(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -203,12 +211,14 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+//PasswordChangeRequest a struct to hold information about a a user changing his password
 type PasswordChangeRequest struct {
 	Username    string `json:"username"`
 	AuthToken   string `json:"authToken"`
 	NewPassword string `json:"newPassword"`
 }
 
+//ChangePassword changes the users password after validating his token
 func ChangePassword(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
