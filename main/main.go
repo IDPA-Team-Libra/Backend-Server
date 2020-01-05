@@ -65,10 +65,11 @@ func main() {
 	service.AddHTTPRoute("/transaction/all", GetUserTransaction)
 	service.AddHTTPRoute("/portfolio/get", GetPortfolio)
 	service.AddHTTPRoute("/authenticate/token", ValidateUserToken)
-	service.AddHTTPRoute("/performance/get", ValidateUserToken)
+	service.AddHTTPRoute("/performance/get", GetUserPerformance)
 	/*
 		END SPACE FOR ROUTES
 	*/
+	performance.UpdatePerformance(GetDatabaseInstance())
 	go apiconnection.LoadAllStocks("5")
 	SetupCronJobs()
 	service.StartHTTPServer()

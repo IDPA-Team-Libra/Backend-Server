@@ -9,23 +9,28 @@ import (
 
 //Performance entry for performance
 type Performance struct {
-	Performance int64  `json:"performance"`
-	Date        string `json:"date"`
+	Performance float64 `json:"performance"`
+	Date        string  `json:"date"`
 }
 
 //LoadUserPerformance loads the performance of a single user
 func LoadUserPerformance(userID int64, connection *sql.DB) []Performance {
-	rows, err := connection.Query("SELECT performance,date from performance WHERE userid = ?")
+	statement, err := connection.Prepare("SELECT performance, date FROM performance WHERE userID = ?")
+	defer statement.Close()
+	if err != nil {
+		fmt.Println(err)
+	}
+	rows, err := statement.Query(userID)
 	defer rows.Close()
 	if err != nil {
-		return nil
+		fmt.Println(err)
 	}
 	var performances []Performance
 	for rows.Next() {
 		var performance Performance
 		err := rows.Scan(&performance.Performance, &performance.Date)
 		if err != nil {
-			fmt.Println("Fatal error getting ids from rows")
+			fmt.Println(err)
 		}
 		performances = append(performances, performance)
 	}
