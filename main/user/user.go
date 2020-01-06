@@ -2,6 +2,7 @@ package user
 
 import (
 	"database/sql"
+	"fmt"
 	"strings"
 
 	"github.com/asaskevich/govalidator"
@@ -287,4 +288,25 @@ func OverwritePasswordForUserID(userID int64, newPassword string, databaseConnec
 		return false
 	}
 	return true
+}
+
+//GetUserIDs retreives all users in the database
+func GetUserIDs(connection *sql.DB) []int64 {
+	rows, err := connection.Query("SELECT id FROM User")
+	if err != nil {
+		fmt.Println("Failed to run query", err)
+		return nil
+	}
+	defer rows.Close()
+	var userIDs []int64
+	for rows.Next() {
+		var id int64
+		err := rows.Scan(&id)
+		if err != nil {
+			fmt.Println("Fatal error getting ids from result rows")
+		}
+		fmt.Println(id)
+		userIDs = append(userIDs, id)
+	}
+	return userIDs
 }

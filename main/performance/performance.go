@@ -39,7 +39,7 @@ func LoadUserPerformance(userID int64, connection *sql.DB) []Performance {
 
 //UpdatePerformance updates the current perfomance of all user portfolios -> performance.sql
 func UpdatePerformance(connection *sql.DB) {
-	var userIDs = getUsers(connection)
+	var userIDs = user.GetUserIDs(connection)
 	for index := range userIDs {
 		var userportfolio = user.LoadPortfolio(userIDs[index], connection)
 		var currentBalance, _ = userportfolio.Balance.Float64()
@@ -53,27 +53,6 @@ func UpdatePerformance(connection *sql.DB) {
 		var performance = result / startCapital
 		writePerformance(userIDs[index], performance, connection)
 	}
-}
-
-// retreives all users in the database
-func getUsers(connection *sql.DB) []int64 {
-	rows, err := connection.Query("SELECT id FROM User")
-	if err != nil {
-		fmt.Println("Failed to run query", err)
-		return nil
-	}
-	defer rows.Close()
-	var userIDs []int64
-	for rows.Next() {
-		var id int64
-		err := rows.Scan(&id)
-		if err != nil {
-			fmt.Println("Fatal error getting ids from result rows")
-		}
-		fmt.Println(id)
-		userIDs = append(userIDs, id)
-	}
-	return userIDs
 }
 
 // writes the calculated performance into the database

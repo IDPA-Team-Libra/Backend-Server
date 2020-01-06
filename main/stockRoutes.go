@@ -11,8 +11,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var stockData []stock.Stock
-var serializedStockItems []byte
+var serializedStockItems []byte = nil
 
 //Stocks is a serialized holder for stocks
 type Stocks struct {
@@ -21,14 +20,13 @@ type Stocks struct {
 
 //PurgeStockScreen removes all memory stored stock values
 func PurgeStockScreen() {
-	stockData = nil
+	serializedStockItems = nil
 }
 
 //GetStocks returns all stock items that are used for the market page
 func GetStocks(w http.ResponseWriter, r *http.Request) {
-	if len(stockData) > 0 && stockData != nil {
+	if serializedStockItems != nil {
 		w.Write(serializedStockItems)
-		return
 	}
 	stocks := stock.LoadStocksForRoute("5")
 	for key := range stocks {
@@ -42,7 +40,6 @@ func GetStocks(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err.Error())
 	}
 	serializedStockItems = data
-	stockData = stocks
 	w.Write(serializedStockItems)
 }
 

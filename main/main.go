@@ -95,6 +95,9 @@ func SetupCronJobs() {
 	if err != nil {
 		panic(err.Error())
 	}
+	_, err = cronJob.AddFunc("@every 12h", func() {
+		database.UpdateUserPortfolios(GetDatabaseInstance())
+	})
 	_, err = cronJob.AddFunc("@midnight", func() {
 		database.StartBatchProcess(GetDatabaseInstance())
 	})

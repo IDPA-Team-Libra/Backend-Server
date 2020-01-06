@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 	"math/big"
 
 	"github.com/Liberatys/libra-back/main/stock"
@@ -71,4 +72,23 @@ func connectPortfolioItemWithPortfolio(portfolio user.Portfolio, item user.Portf
 		PortfolioItemID: item.ID,
 	}
 	return portfolioConnection.Write(databaseConnection)
+}
+
+//UpdateUserPortfolios updates the portfolio value of all users with the currently stored stock values
+func UpdateUserPortfolios(databaseConnection *sql.DB) {
+	userIDs := user.GetUserIDs(databaseConnection)
+	for index := range userIDs {
+		res, err := databaseConnection.Query("SELECT SUM(item.quantity * (SELECT price FROM stock WHERE id = item.stock_id)) FROM portfolio_item item, portfolio_to_item port_to_item, portfolio port WHERE item.id = port_to_item.portfolio_item_id AND port_to_item.portfolio_id = port.id AND port.user_id = ?", userIDs[index])
+		defer res.Close()
+		if err != nil {
+			return
+		}
+		var currentTotalPorfolioValue string
+		res.Next()
+		res.Scan(&currentTotalPorfolioValue)
+		_, err = databaseConnection.Exec("UPDATE portfolio SET current_value = ? WHERE user_id = ?", currentTotalPorfolioValue, userIDs[index])
+		if err != nil {
+			fmt.Println("Error in writing update to portfolio")
+		}
+	}
 }
