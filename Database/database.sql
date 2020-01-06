@@ -1155,3 +1155,6 @@ VALUES
 CREATE USER 'administrator' @'localhost' IDENTIFIED BY 'LOCAL1234';
 
 GRANT ALL PRIVILEGES ON libra.* TO 'administrator' @'localhost';
+
+-- SELECT item.quantity,(SELECT price from stock WHERE id = item.stock_id) FROM portfolio_item item, portfolio_to_item port_to_item, portfolio port WHERE item.id = port_to_item.portfolio_item_id AND port_to_item.portfolio_id = port.id AND port.user_id = ?;
+-- SELECT SUM(item.quantity * (SELECT price FROM stock WHERE id = item.stock_id)) FROM portfolio_item item, portfolio_to_item port_to_item, portfolio port WHERE item.id = port_to_item.portfolio_item_id AND port_to_item.portfolio_id = port.id AND port.user_id = ?;
