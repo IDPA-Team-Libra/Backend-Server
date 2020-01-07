@@ -37,8 +37,8 @@ func main() {
 	logger.LogMessage("Server has started on 3440", logger.INFO)
 	service.ActivateHTTPServer()
 	//service.ActivateHTTPSServer("certs/server.crt", "certs/server.key")
-	//service.SetDatabaseInformation("localhost", "3306", "mysql", "administrator", "LOCAL1234", "libra")
-	service.SetDatabaseInformation("localhost", "3306", "mysql", "root", "pw123", "libra")
+	service.SetDatabaseInformation("localhost", "3306", "mysql", "administrator", "LOCAL1234", "libra")
+	//service.SetDatabaseInformation("localhost", "3306", "mysql", "root", "pw123", "libra")
 	db := service.GetDatabaseConnection()
 	dbConn = db
 	dbConn = db
@@ -69,7 +69,7 @@ func main() {
 	/*
 		END SPACE FOR ROUTES
 	*/
-	performance.UpdatePerformance(GetDatabaseInstance())
+	//performance.UpdatePerformance(GetDatabaseInstance())
 	go apiconnection.LoadAllStocks("5")
 	SetupCronJobs()
 	service.StartHTTPServer()

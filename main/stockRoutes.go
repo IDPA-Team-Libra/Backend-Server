@@ -2,7 +2,8 @@ package main
 
 import (
 	"bytes"
-	"compress/flate"
+	"compress/zlib"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -15,7 +16,7 @@ var serializedStockItems []byte = nil
 
 //Stocks is a serialized holder for stocks
 type Stocks struct {
-	Stocks []stock.Stock `json:"stocks"`
+	Stocks string `json:"stocks"`
 }
 
 //PurgeStockScreen removes all memory stored stock values
@@ -27,20 +28,29 @@ func PurgeStockScreen() {
 func GetStocks(w http.ResponseWriter, r *http.Request) {
 	if serializedStockItems != nil {
 		w.Write(serializedStockItems)
+		return
 	}
 	stocks := stock.LoadStocksForRoute("5")
 	for key := range stocks {
 		stocks[key].Load()
+		stocks[key].Data = ""
 	}
+	var b bytes.Buffer
+	writer := zlib.NewWriter(&b)
+	data, err := json.Marshal(stocks)
+	writer.Write(data)
+	writer.Close()
+	encoded := base64.StdEncoding.EncodeToString([]byte(b.Bytes()))
 	stockHolderInstance := Stocks{
-		stocks,
+		Stocks: encoded,
 	}
-	data, err := json.Marshal(stockHolderInstance)
+	json, err := json.Marshal(stockHolderInstance)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	serializedStockItems = data
+	serializedStockItems = json
 	w.Write(serializedStockItems)
+
 }
 
 //GetStockByParameter returns information for the grahpics backend in dash
@@ -54,13 +64,4 @@ func GetStockByParameter(w http.ResponseWriter, r *http.Request) {
 	}
 	stockInstance.Load()
 	w.Write([]byte(stockInstance.Data))
-}
-
-// method that comes to use in a later iteration, where more stocks are transfered
-func compress(source string) []byte {
-	buf := new(bytes.Buffer)
-	w, _ := flate.NewWriter(buf, 7)
-	w.Write([]byte(source))
-	w.Flush()
-	return buf.Bytes()
 }

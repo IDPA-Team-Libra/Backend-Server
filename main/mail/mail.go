@@ -58,7 +58,7 @@ func (mail *Mail) SendEmail() {
 		mailjet.InfoMessagesV31{
 			From: &mailjet.RecipientV31{
 				Email: mail.Sender,
-				Name:  "Gmail",
+				Name:  "Libra-Project-Company",
 			},
 			To: &mailjet.RecipientsV31{
 				mailjet.RecipientV31{
