@@ -19,6 +19,12 @@ type PortfolioContent struct {
 	Transactions string `json:"transactions"`
 }
 
+//PortfolioRequest holds request information for the portfolio request
+type PortfolioRequest struct {
+	Username  string `json:"username"`
+	AuthToken string `json:"authToken"`
+}
+
 //GetPortfolio get portfolio-information for a user
 func GetPortfolio(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
@@ -27,14 +33,14 @@ func GetPortfolio(w http.ResponseWriter, r *http.Request) {
 		logger.LogMessage("Anfrage an Portfolio hatte keine Parameter", logger.INFO)
 		return
 	}
-	var currentUser User
+	var currentUser PortfolioRequest
 	err = json.Unmarshal(body, &currentUser)
 	if err != nil {
 		logger.LogMessage("Anfrage an Portfolio hatte invalides JSON", logger.INFO)
 		w.Write([]byte("Invalid json"))
 		return
 	}
-	validator := sec.NewTokenValidator(currentUser.AccessToken, currentUser.Username)
+	validator := sec.NewTokenValidator(currentUser.AuthToken, currentUser.Username)
 	if validator.IsValidToken(jwtKey) == false {
 		logger.LogMessage(fmt.Sprintf("Anfrage an GetUserTransaction hatte einen ungültigen jwt. | User: %s", currentUser.Username), logger.WARNING)
 		response := PortfolioContent{}
@@ -46,7 +52,7 @@ func GetPortfolio(w http.ResponseWriter, r *http.Request) {
 		w.Write(resp)
 		return
 	}
-	userInstance := user.CreateUserInstance(currentUser.Username, currentUser.Password, "")
+	userInstance := user.CreateUserInstance(currentUser.Username, "", "")
 	userInstance.ID = user.GetUserIDByUsername(userInstance.Username, GetDatabaseInstance())
 	trans := transaction.Transaction{}
 	transactions := trans.LoadTransactionsByProcessState(userInstance.ID, GetDatabaseInstance(), true)

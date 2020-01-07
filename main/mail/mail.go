@@ -2,7 +2,6 @@ package mail
 
 import (
 	"fmt"
-	"log"
 
 	mailjet "github.com/mailjet/mailjet-apiv3-go"
 )
@@ -58,7 +57,7 @@ func (mail *Mail) SendEmail() {
 		mailjet.InfoMessagesV31{
 			From: &mailjet.RecipientV31{
 				Email: mail.Sender,
-				Name:  "Libra-Project-Company",
+				Name:  "project-libra-company",
 			},
 			To: &mailjet.RecipientsV31{
 				mailjet.RecipientV31{
@@ -69,13 +68,13 @@ func (mail *Mail) SendEmail() {
 			Subject:  mail.Subject,
 			TextPart: "",
 			HTMLPart: mail.Message,
-			CustomID: "Libra-Email",
+			CustomID: "project-libra-company",
 		},
 	}
 	messages := mailjet.MessagesV31{Info: messagesInfo}
 	_, err := mailjetClient.SendMailV31(&messages)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 }
 

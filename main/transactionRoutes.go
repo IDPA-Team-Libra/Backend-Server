@@ -70,7 +70,6 @@ func GetUserTransaction(w http.ResponseWriter, r *http.Request) {
 	trans := transaction.Transaction{}
 	transactions := trans.LoadTransactionsByProcessState(userID, GetDatabaseInstance(), true)
 	jsonObject, err := json.Marshal(transactions)
-	fmt.Println(transactions)
 	if err != nil {
 		logger.LogMessage(fmt.Sprintf("Das Request Format in einer Anfrage an GetUserTransaction wurde nicht eingehalten | User: %s", currentUser.Username), logger.WARNING)
 		obj, _ := json.Marshal("Invalid request format")
@@ -341,6 +340,9 @@ func HandleDelayedTransaction(w http.ResponseWriter, r *http.Request) (bool, tra
 	totalPrice, _ = totalPrice.SetString(requestedStock.Price)
 	amount := float64(request.Amount)
 	totalPrice = totalPrice.Mul(totalPrice, big.NewFloat(amount))
+	if request.Date == "" {
+		return false, transaction.Transaction{}
+	}
 	transaction := transaction.NewTransaction(userID, request.Operation, request.StockSymbol, request.Amount, request.ExpectedStockPrice, request.Date)
 	return true, transaction
 }
@@ -354,7 +356,7 @@ func AddDelayedBuyTransaction(w http.ResponseWriter, r *http.Request) {
 	handler, err := GetDatabaseInstance().Begin()
 	if err != nil {
 	}
-	if transaction.Write(false, handler, "") == false {
+	if transaction.Write(false, handler, "-1") == false {
 		response := TransactionResponse{
 			Message:   "Kauf konnte nicht abgewickelt werden",
 			State:     "Failure",
@@ -364,7 +366,7 @@ func AddDelayedBuyTransaction(w http.ResponseWriter, r *http.Request) {
 		handler.Rollback()
 		obj, _ := json.Marshal(response)
 		w.Write([]byte(obj))
-
+		return
 	}
 	response := TransactionResponse{
 		Message:   "Kaufaktion wird eingeleitet. Kauf wird am angegeben Datum eingeleitet.",
@@ -387,7 +389,7 @@ func AddDelayedSellTransaction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 
 	}
-	if transaction.Write(false, handler, "") == false {
+	if transaction.Write(false, handler, "-1") == false {
 		response := TransactionResponse{
 			Message:   "Verkauf konnte nicht abgewickelt werden",
 			State:     "Failure",

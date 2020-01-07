@@ -36,18 +36,17 @@ func main() {
 	defer logger.SyncLogger()
 	logger.LogMessage("Server has started on 3440", logger.INFO)
 	service.ActivateHTTPServer()
-	//service.ActivateHTTPSServer("certs/server.crt", "certs/server.key")
+	//service.ActivateHTTPSServer("/root/certs/cert_chain.crt", "/root/certs/private.key")
 	service.SetDatabaseInformation("localhost", "3306", "mysql", "administrator", "LOCAL1234", "libra")
-	//service.SetDatabaseInformation("localhost", "3306", "mysql", "root", "pw123", "libra")
 	db := service.GetDatabaseConnection()
 	dbConn = db
 	dbConn = db
 	setDatabaseReferences(db)
 	defer db.Close()
 	mail.SetMailConfiguration(mail.Configuration{
-		Sender: "librastockcompany@gmail.com",
-		Pass:   "0508f610ab733eb6bc27d06587854697",
-		UserID: "0d3a0e52dc9907a6ba30762a2a0999c3",
+		Sender: "nick.flueckiger@outlook.de",
+		Pass:   "2f1ac7851a4f6ecc2c81f136dc47924a",
+		UserID: "5720e04d0b5a5ab347ab6beac7689ad2",
 	})
 	/*
 		SPACE FOR ROUTES
@@ -69,11 +68,9 @@ func main() {
 	/*
 		END SPACE FOR ROUTES
 	*/
-	//performance.UpdatePerformance(GetDatabaseInstance())
 	go apiconnection.LoadAllStocks("5")
 	SetupCronJobs()
 	service.StartHTTPServer()
-
 }
 
 func setDatabaseReferences(database *sql.DB) {

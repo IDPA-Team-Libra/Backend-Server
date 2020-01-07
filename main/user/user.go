@@ -305,7 +305,6 @@ func GetUserIDs(connection *sql.DB) []int64 {
 		if err != nil {
 			fmt.Println("Fatal error getting ids from result rows")
 		}
-		fmt.Println(id)
 		userIDs = append(userIDs, id)
 	}
 	return userIDs
