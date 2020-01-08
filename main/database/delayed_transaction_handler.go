@@ -109,6 +109,9 @@ func BatchBuyTransactions(transaction transaction.Transaction, conn *sql.DB) (bo
 	expectedTransactionValue := new(big.Float)
 	expectedTransactionValue, _ = expectedTransactionValue.SetString(transaction.Value)
 	handler, _ := conn.Begin()
+	addition := new(big.Float)
+	addition, _ = addition.SetString("50")
+	totalPrice = totalPrice.Add(totalPrice, addition)
 	// can only execute enough money is around
 	transaction.Remove(handler)
 	handler.Commit()
@@ -169,6 +172,9 @@ func BatchSellTransactions(transaction transaction.Transaction, conn *sql.DB) (b
 	s := fmt.Sprintf("%f", float64(transaction.Amount))
 	additionalBalance := MultiplyString(s, requestedStock.Price)
 	portfolio.Balance = *portfolio.Balance.Add(&portfolio.Balance, additionalBalance)
+	subtraction := new(big.Float)
+	subtraction, _ = subtraction.SetString("50")
+	additionalBalance = additionalBalance.Sub(additionalBalance, subtraction)
 	portfolio.CurrentValue = *portfolio.CurrentValue.Sub(&portfolio.CurrentValue, additionalBalance)
 	if transaction.Write(true, handler, portfolio.Balance.String()) == false {
 		handler.Rollback()

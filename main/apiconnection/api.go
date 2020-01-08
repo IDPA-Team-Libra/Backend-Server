@@ -51,8 +51,6 @@ func LoadAllStocks(timeInterval string) {
 		"5",
 		"1",
 		"15",
-		"30",
-		"60",
 	}
 	var keyIndex int
 	keyIndex = 0
