@@ -307,6 +307,7 @@ func HandleDelayedTransaction(w http.ResponseWriter, r *http.Request) (bool, tra
 	}
 	var request TransactionRequest
 	err = json.Unmarshal(body, &request)
+	fmt.Println(request)
 	if err != nil {
 		logger.LogMessage(err.Error(), logger.WARNING)
 		w.Write([]byte("Invalid request format"))

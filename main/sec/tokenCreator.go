@@ -22,10 +22,10 @@ type Response struct {
 }
 
 //NewTokenCreator creates a new TokenCreator based on secret and username
-func NewTokenCreator(username, secret string) TokenCreator {
+func NewTokenCreator(username string, secret []byte) TokenCreator {
 	return TokenCreator{
 		Username: username,
-		Secret:   []byte(secret),
+		Secret:   secret,
 	}
 }
 

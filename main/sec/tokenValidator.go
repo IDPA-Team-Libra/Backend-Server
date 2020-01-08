@@ -1,6 +1,8 @@
 package sec
 
 import (
+	"fmt"
+
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -35,6 +37,7 @@ func (TokenValidator *TokenValidator) IsValidToken(secret []byte) bool {
 		if err == jwt.ErrSignatureInvalid {
 			return false
 		}
+		fmt.Println(err)
 		return false
 	}
 	if !tkn.Valid {

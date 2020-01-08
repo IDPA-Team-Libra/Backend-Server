@@ -63,6 +63,7 @@ func (user *User) IsValidUsername() (bool, string) {
 	return true, "Valid"
 }
 
+//TODO investigate strange validation for N.Flueckiger@stud.bbbaden.ch
 //IsValidEmail checks if an email-adress is valid
 func (user *User) IsValidEmail() (bool, string) {
 	if govalidator.IsEmail(user.Email) == false {

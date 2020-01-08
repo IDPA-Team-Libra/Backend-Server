@@ -43,13 +43,9 @@ func UpdatePerformance(connection *sql.DB) {
 	for index := range userIDs {
 		var userportfolio = user.LoadPortfolio(userIDs[index], connection)
 		var currentBalance, _ = userportfolio.Balance.Float64()
-		//fmt.Println(currentBalance)
 		var currentValue, _ = userportfolio.CurrentValue.Float64()
-		//fmt.Println(currentValue)
 		var startCapital, _ = userportfolio.StartCapital.Float64()
-		//fmt.Println(startCapital)
 		var result = (currentBalance + currentValue) - startCapital
-		//fmt.Println(result)
 		var performance = result / startCapital
 		writePerformance(userIDs[index], performance, connection)
 	}
