@@ -10,16 +10,16 @@
   version = "v0.3.1"
 
 [[projects]]
-  digest = "1:c84a587136cb69cecc11f3dbe9f9001444044c0dba74997b07f7e4c150b07cda"
+  digest = "1:5e525de85b5793f1eea106a0ea829690f2675e251e5694ed6d759c63c7631c3e"
   name = "github.com/DATA-DOG/go-sqlmock"
   packages = ["."]
   pruneopts = "UT"
-  revision = "3f9954f6f6697845b082ca57995849ddf614f450"
-  version = "v1.3.3"
+  revision = "012d92843b006e16d4c4d699b94b5148e76020e7"
+  version = "v1.4.0"
 
 [[projects]]
   branch = "master"
-  digest = "1:a09d3288910349161f5a36f1f0377322d40e3a4f0ccb4315f0297cfa8fae1126"
+  digest = "1:b30f696c0626172ff35101593bc8d75ebecd1b8984338930810c624370cc48fc"
   name = "github.com/Liberatys/Sanctuary"
   packages = [
     "communication",
@@ -28,7 +28,7 @@
     "service",
   ]
   pruneopts = "UT"
-  revision = "340e0ec6aba0ed125d2b132518f8b9491ecbeb70"
+  revision = "c714a90e3c6eceac344247bdfb301539091d61e7"
 
 [[projects]]
   branch = "master"
@@ -55,12 +55,12 @@
   version = "v3.2.0"
 
 [[projects]]
-  digest = "1:ec6f9bf5e274c833c911923c9193867f3f18788c461f76f05f62bb1510e0ae65"
+  digest = "1:a3af33fd30536d9c5a7b6ad542390919e57c1125097a194c7b3d9904109a0611"
   name = "github.com/go-sql-driver/mysql"
   packages = ["."]
   pruneopts = "UT"
-  revision = "72cd26f257d44c1114970e19afddcd812016007e"
-  version = "v1.4.1"
+  revision = "17ef3dd9d98b69acec3e85878995ada9533a9370"
+  version = "v1.5.0"
 
 [[projects]]
   digest = "1:cbec35fe4d5a4fba369a656a8cd65e244ea2c743007d8f6c1ccb132acf9d1296"
@@ -188,15 +188,7 @@
     "internal/semver",
   ]
   pruneopts = "UT"
-  revision = "774c71fcf11405d0a5ce0aba75dc113822d62178"
-
-[[projects]]
-  digest = "1:c25289f43ac4a68d88b02245742347c94f1e108c534dda442188015ff80669b3"
-  name = "google.golang.org/appengine"
-  packages = ["cloudsql"]
-  pruneopts = "UT"
-  revision = "971852bfffca25b069c31162ae8f247a3dba083b"
-  version = "v1.6.5"
+  revision = "11e9d9cc0042e6bd10337d4d2c3e5d9295508e7d"
 
 [[projects]]
   digest = "1:131158a88aad1f94854d0aa21a64af2802d0a470fb0f01cb33c04fafd2047111"

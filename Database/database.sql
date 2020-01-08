@@ -4,7 +4,7 @@ CREATE DATABASE libra;
 
 USE libra;
 
-CREATE TABLE USER (
+CREATE TABLE user (
     id INTEGER NOT NULL AUTO_INCREMENT,
     username varchar (255) NOT NULL,
     password varchar (255) NOT NULL,
@@ -13,7 +13,7 @@ CREATE TABLE USER (
     PRIMARY KEY (id)
 );
 
-CREATE TABLE TRANSACTION (
+CREATE TABLE transaction (
     id INTEGER NOT NULL AUTO_INCREMENT,
     userid INTEGER NOT NULL,
     action varchar (255),

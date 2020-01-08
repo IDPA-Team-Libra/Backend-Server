@@ -167,7 +167,6 @@ func ValidateUserToken(w http.ResponseWriter, r *http.Request) {
 	}
 	validator := sec.NewTokenValidator(currentUser.AccessToken, currentUser.Username)
 	response := PortfolioContent{}
-	fmt.Println(validator.IsValidToken(jwtKey))
 	if validator.IsValidToken(jwtKey) == false {
 		response.Message = "Invalid Token"
 		if err != nil {
